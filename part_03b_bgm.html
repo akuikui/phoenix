@@ -1,0 +1,980 @@
+<script>
+    // ============ 古风 BGM 系统（进阶版 Web Audio API 作曲） ============
+    // 目标：在保持五声音阶与现有对外接口不变的前提下，
+    // 使用和弦进行 + 分解和弦 + 多波形分层 + 颤音，为不同情绪营造更自然、耐听的环境音乐。
+
+    const BGM = {
+        ctx: null,
+        masterGain: null,
+        reverb: null,
+        reverbGain: null,
+        filter: null,
+
+        isPlaying: false,
+        isMuted: false,
+        currentMood: 'calm',
+
+        // 所有 setTimeout id，便于统一清理
+        intervalIds: [],
+        // 所有振荡器（含 LFO），stop() 时统一停止
+        oscillators: [],
+
+        // 主音量（0.0 ~ 0.5），对外通过 setVolume(0~100) 控制
+        volume: 0.35,
+
+        // 短句状态：用于实现“问句-答句”式乐句发展
+        phraseIndex: 0,
+        phraseIsResponse: false,
+
+        // 五声音阶（宫商角徵羽），按从低到高排列，多八度展开
+        scales: {
+            // calm：C 宫调式五声（C D E G A）
+            calm: [262, 294, 330, 392, 440, 523, 587, 659, 784, 880],
+            // tense：偏 B 小调色彩，音程更紧张
+            tense: [247, 277, 330, 370, 415, 494, 554, 659, 740, 830],
+            // romantic：C 大调五声高音区，偏明亮浪漫
+            romantic: [262, 330, 392, 523, 659, 784, 1047, 1319],
+            // mysterious：A 小调色彩，音域中低，适合诡秘氛围
+            mysterious: [220, 262, 294, 392, 440, 523, 587, 784],
+            // majestic：G 调色彩，适合庄严进行曲式的感觉
+            majestic: [196, 262, 294, 392, 440, 523, 587, 659, 784],
+            // title：A 小调五声音阶（羽调式），用于标题大气又略带忧伤的主旋律
+            // A(110/220) C D E G 多八度展开
+            title: [110, 131, 147, 165, 196, 220, 262, 294, 330, 392, 440, 523, 587, 659]
+        },
+
+        // 各情绪下的基础配置（节奏、滤波、混响等）
+        moods: {
+            // calm：平和流动
+            calm: {
+                bpm: 72,
+                beatsPerChord: 4,
+                chordsPerPhrase: 4,
+                arpeggioSubdivision: 0.5, // 以八分音符为主
+                layers: 2,
+                filterFreq: 1200,
+                reverbMix: 0.28,
+                melodyVelocity: 0.10,
+                bassVelocity: 0.08,
+                bassOctaveDown: true
+            },
+            // tense：紧张，节奏更快，音程跳跃更大
+            tense: {
+                bpm: 110,
+                beatsPerChord: 4,
+                chordsPerPhrase: 4,
+                arpeggioSubdivision: 0.25, // 十六分音符式跳动
+                layers: 3,
+                filterFreq: 2000,
+                reverbMix: 0.18,
+                melodyVelocity: 0.11,
+                bassVelocity: 0.10,
+                bassOctaveDown: true
+            },
+            // romantic：温柔、舒展的分解和弦
+            romantic: {
+                bpm: 76,
+                beatsPerChord: 4,
+                chordsPerPhrase: 4,
+                arpeggioSubdivision: 0.5,
+                layers: 2,
+                filterFreq: 900,
+                reverbMix: 0.32,
+                melodyVelocity: 0.11,
+                bassVelocity: 0.08,
+                bassOctaveDown: true
+            },
+            // mysterious：稀疏的中低音与长悬音，留白感强
+            mysterious: {
+                bpm: 60,
+                beatsPerChord: 4,
+                chordsPerPhrase: 2,
+                arpeggioSubdivision: 2.0, // 一段中只出现极少的点缀音
+                layers: 2,
+                filterFreq: 800,
+                reverbMix: 0.38,
+                melodyVelocity: 0.08,
+                bassVelocity: 0.07,
+                bassOctaveDown: true
+            },
+            // majestic：庄严、有推进感
+            majestic: {
+                bpm: 90,
+                beatsPerChord: 4,
+                chordsPerPhrase: 4,
+                arpeggioSubdivision: 0.5,
+                layers: 3,
+                filterFreq: 1500,
+                reverbMix: 0.30,
+                melodyVelocity: 0.12,
+                bassVelocity: 0.10,
+                bassOctaveDown: true
+            },
+            // title：标题主 BGM —— 缓慢分解和弦 + 持续低音，略似古琴/古筝
+            title: {
+                bpm: 58,
+                beatsPerChord: 4,
+                chordsPerPhrase: 4,
+                arpeggioSubdivision: 0.5,
+                layers: 3,
+                filterFreq: 900,
+                reverbMix: 0.40,
+                melodyVelocity: 0.09,
+                bassVelocity: 0.11,
+                bassOctaveDown: true
+            }
+        },
+
+        // 每个情绪下对应的简单和弦进行（索引均指向各自 scales[mood] 内的音）
+        // 通过分解和弦 + 持续低音来体现进行感
+        chordProgressions: {
+            // calm：C → Am → F(sus2) → G
+            calm: [
+                { name: 'C',   rootIndex: 0, indices: [0, 2, 3], bassIndex: 0 },      // C E G
+                { name: 'Am',  rootIndex: 4, indices: [4, 0, 2], bassIndex: 4 },      // A C E
+                { name: 'F*',  rootIndex: 1, indices: [1, 3, 4], bassIndex: 1 },      // 近似 F 的挂留和弦
+                { name: 'G',   rootIndex: 3, indices: [3, 4, 1], bassIndex: 3 }       // G A D
+            ],
+            // tense：以紧张的堆叠三和弦为主
+            tense: [
+                { name: 'Bm(add4)', rootIndex: 0, indices: [0, 1, 3], bassIndex: 0 },
+                { name: 'C#sus',    rootIndex: 1, indices: [1, 3, 4], bassIndex: 1 },
+                { name: 'Em',       rootIndex: 2, indices: [0, 2, 5], bassIndex: 0 },
+                { name: 'C#dim',    rootIndex: 1, indices: [1, 4, 6], bassIndex: 1 }
+            ],
+            // romantic：C → Am 感 → F → G
+            romantic: [
+                { name: 'C',   rootIndex: 0, indices: [0, 1, 2], bassIndex: 0 },      // C E G
+                { name: 'Am',  rootIndex: 1, indices: [1, 2, 4], bassIndex: 1 },      // 以 E 为根的柔和堆叠
+                { name: 'F',   rootIndex: 0, indices: [0, 2, 3], bassIndex: 0 },      // C G C
+                { name: 'G',   rootIndex: 2, indices: [2, 3, 4], bassIndex: 2 }       // G C5 E5
+            ],
+            // mysterious：两个主要和弦来回转换，突出留白
+            mysterious: [
+                { name: 'Am',      rootIndex: 0, indices: [0, 1, 4], bassIndex: 0 },  // A C A
+                { name: 'Csus',    rootIndex: 1, indices: [1, 3, 4], bassIndex: 1 },  // C G A
+                { name: 'Am(addD)',rootIndex: 0, indices: [0, 2, 3], bassIndex: 0 }   // A D G
+            ],
+            // majestic：G → C → D → Em
+            majestic: [
+                { name: 'G',   rootIndex: 0, indices: [0, 2, 3], bassIndex: 0 },      // G D G
+                { name: 'C',   rootIndex: 1, indices: [1, 3, 5], bassIndex: 1 },      // C G C
+                { name: 'D',   rootIndex: 2, indices: [2, 4, 6], bassIndex: 2 },      // D A D
+                { name: 'Em',  rootIndex: 4, indices: [4, 6, 7], bassIndex: 4 }       // A D E
+            ],
+            // title：Am → C → G → Em（A 小调五声）
+            title: [
+                { name: 'Am', rootIndex: 5, indices: [5, 6, 8], bassIndex: 0 },      // A C E，低音用最底 A
+                { name: 'C',  rootIndex: 6, indices: [6, 8, 9], bassIndex: 1 },      // C E G
+                { name: 'G',  rootIndex: 4, indices: [4, 7, 9], bassIndex: 4 },      // G D G
+                { name: 'Em', rootIndex: 3, indices: [3, 4, 8], bassIndex: 3 }       // E G E
+            ]
+        },
+
+        // ================== 初始化与基础音频图 ==================
+        init() {
+            if (this.ctx) return;
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+
+            this.ctx = new AudioCtx();
+
+            // 主音量控制节点
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = this.volume; // 内部使用 0.0 ~ 0.5
+
+            // 柔和低通滤波，模拟古琴/古筝高频被削弱的感觉
+            this.filter = this.ctx.createBiquadFilter();
+            this.filter.type = 'lowpass';
+            this.filter.frequency.value = 1200;
+            this.filter.Q.value = 0.8;
+
+            // 简单卷积混响（固定长度，混响量用 reverbGain 控制）
+            this.reverb = this.createReverb(3.5);
+            this.reverbGain = this.ctx.createGain();
+            this.reverbGain.gain.value = 0.28;
+
+            // 连接：
+            // 乐器 → filter → masterGain → destination
+            //          ↘ reverb → reverbGain ↗
+            this.filter.connect(this.masterGain);
+            this.filter.connect(this.reverb);
+            this.reverb.connect(this.reverbGain);
+            this.reverbGain.connect(this.masterGain);
+
+            this.masterGain.connect(this.ctx.destination);
+        },
+
+        // 根据时长创建简易卷积混响脉冲响应
+        createReverb(seconds) {
+            const length = Math.floor(this.ctx.sampleRate * (seconds || 3));
+            const impulse = this.ctx.createBuffer(2, length, this.ctx.sampleRate);
+            for (let ch = 0; ch < 2; ch++) {
+                const data = impulse.getChannelData(ch);
+                for (let i = 0; i < length; i++) {
+                    // 指数衰减噪声，模拟房间混响尾音
+                    const decay = Math.pow(1 - i / length, 2.5);
+                    data[i] = (Math.random() * 2 - 1) * decay;
+                }
+            }
+            const convolver = this.ctx.createConvolver();
+            convolver.buffer = impulse;
+            return convolver;
+        },
+
+        // ================== 声部构建：拨弦音色与颤音 ==================
+
+        /**
+         * 播放一个单音（可叠加多层波形 + 颤音）。
+         * @param {number} freq      频率（Hz），0 表示休止
+         * @param {number} startTime 相对 AudioContext 的开始时间（秒）
+         * @param {number} duration  持续时间（秒）
+         * @param {number} velocity  0.0 ~ 0.2 左右，本函数会限制到 0.05~0.15
+         * @param {Object} options   包含 attack/decay/release/vibrato 等微调
+         */
+        playNote(freq, startTime, duration, velocity = 0.1, options = {}) {
+            if (!this.ctx || !this.filter || !freq || duration <= 0) return;
+
+            const ctx = this.ctx;
+            const now = ctx.currentTime;
+            const t0 = Math.max(startTime || now, now);
+            const dur = Math.max(duration, 0.05);
+
+            // 控制在更柔和的音量范围
+            const vel = Math.min(Math.max(velocity, 0.05), 0.15);
+
+            // 包络节点（所有叠加的波形在这里统一做 ADSR）
+            const gainNode = ctx.createGain();
+
+            // 主体波形：三角波 + 正弦波，略微失谐模拟弦乐合奏
+            const triOsc = ctx.createOscillator();
+            triOsc.type = 'triangle';
+            triOsc.frequency.setValueAtTime(freq, t0);
+
+            const sineOsc = ctx.createOscillator();
+            sineOsc.type = 'sine';
+            sineOsc.frequency.setValueAtTime(freq, t0);
+
+            // 轻微失谐带来温暖感（chorus 效果）
+            const detuneCentsBase = options.detuneCents != null ? options.detuneCents : 6 + Math.random() * 4; // 6~10 cents
+            triOsc.detune.setValueAtTime(-detuneCentsBase / 2, t0);
+            sineOsc.detune.setValueAtTime(detuneCentsBase / 2, t0);
+
+            const triGain = ctx.createGain();
+            const sineGain = ctx.createGain();
+            triGain.gain.value = 0.7;
+            sineGain.gain.value = 0.5;
+
+            triOsc.connect(triGain);
+            sineOsc.connect(sineGain);
+            triGain.connect(gainNode);
+            sineGain.connect(gainNode);
+
+            gainNode.connect(this.filter);
+
+            // 更柔和的 ADSR 包络（缓一点的攻击 + 指数衰减）
+            const attack = options.attack != null ? options.attack : Math.min(0.06, dur * 0.3);
+            const decay = options.decay != null ? options.decay : dur * 0.2;
+            const release = options.release != null ? options.release : Math.min(0.45, dur * 0.4);
+            const sustainLevel = Math.max(vel * 0.6, 0.01);
+
+            const attackEnd = t0 + attack;
+            const decayEnd = attackEnd + decay;
+            const releaseStart = t0 + dur - release;
+
+            gainNode.gain.setValueAtTime(0.0001, t0);
+            gainNode.gain.linearRampToValueAtTime(vel, attackEnd);
+            gainNode.gain.exponentialRampToValueAtTime(sustainLevel, decayEnd);
+            gainNode.gain.setValueAtTime(sustainLevel, Math.max(decayEnd, releaseStart - 0.01));
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, releaseStart + release);
+
+            // 颤音：只对较长音符生效，频率 4~6Hz，深度 6~10cents
+            let lfoOsc = null;
+            if (options.vibrato && dur > 1.0) {
+                const vibratoRate = options.vibratoRate || 5.0;
+                const vibratoDepth = options.vibratoDepth || 8; // cents
+
+                const lfoGain = ctx.createGain();
+                lfoGain.gain.setValueAtTime(0, t0);
+
+                lfoOsc = ctx.createOscillator();
+                lfoOsc.type = 'sine';
+                lfoOsc.frequency.setValueAtTime(vibratoRate, t0);
+
+                lfoOsc.connect(lfoGain);
+                lfoGain.connect(triOsc.detune);
+                lfoGain.connect(sineOsc.detune);
+
+                // 颤音渐入再淡出
+                lfoGain.gain.linearRampToValueAtTime(vibratoDepth, t0 + 0.4);
+                lfoGain.gain.setValueAtTime(vibratoDepth, releaseStart);
+                lfoGain.gain.linearRampToValueAtTime(0, releaseStart + release);
+
+                lfoOsc.start(t0);
+                lfoOsc.stop(t0 + dur + 0.3);
+            }
+
+            const stopTime = t0 + dur + 0.3;
+            triOsc.start(t0);
+            sineOsc.start(t0);
+            triOsc.stop(stopTime);
+            sineOsc.stop(stopTime);
+
+            this.oscillators.push(triOsc, sineOsc);
+            if (lfoOsc) this.oscillators.push(lfoOsc);
+        },
+
+        /**
+         * 持续低音 / drone：内部使用 playNote，带更长的攻击与释放。
+         * @param {number} freq     中心频率
+         * @param {number} duration 持续时间（秒）
+         * @param {number} velocity 音量
+         * @param {Object} options  额外控制项
+         */
+        playDrone(freq, duration, velocity = 0.08, options = {}) {
+            if (!this.ctx) return;
+            const ctx = this.ctx;
+            const now = ctx.currentTime;
+            const dur = Math.max(duration || 8, 4);
+
+            const opts = Object.assign({
+                attack: Math.min(1.2, dur * 0.25),
+                decay: dur * 0.35,
+                release: Math.min(1.8, dur * 0.3),
+                vibrato: options.vibrato !== false, // 默认有轻微颤音
+                vibratoRate: 4.2,
+                vibratoDepth: 6,
+                detuneCents: 3
+            }, options || {});
+
+            this.playNote(freq, now + 0.02, dur, velocity, opts);
+        },
+
+        // ================== 乐句生成：和弦 + 分解和弦模式 ==================
+
+        /**
+         * 通用乐句构建器：根据和弦进行 + 分解模式生成一个完整乐句。
+         * 返回 { notes: [...], duration: 总时长(秒) }
+         */
+        _buildPhrase(mood, overrides, patternSelector) {
+            const scale = this.scales[mood];
+            const chords = this.chordProgressions[mood];
+            const moodConfig = this.moods[mood] || {};
+            if (!scale || !chords || !scale.length) {
+                return { notes: [], duration: 4 };
+            }
+
+            const bpm = overrides.bpm || moodConfig.bpm || 72;
+            const beatsPerChord = overrides.beatsPerChord || moodConfig.beatsPerChord || 4;
+            const chordsPerPhrase = overrides.chordsPerPhrase || moodConfig.chordsPerPhrase || 4;
+            const secPerBeat = 60 / bpm;
+            const phraseDuration = beatsPerChord * chordsPerPhrase * secPerBeat;
+
+            const notes = [];
+            const startChordIndex = this.phraseIndex || 0;
+            const isResponse = !!this.phraseIsResponse;
+
+            const bassOctaveDown = overrides.bassOctaveDown != null
+                ? overrides.bassOctaveDown
+                : !!moodConfig.bassOctaveDown;
+
+            const bassVelocity = overrides.bassVelocity != null
+                ? overrides.bassVelocity
+                : (moodConfig.bassVelocity != null ? moodConfig.bassVelocity : 0.09);
+
+            const melodyVelocity = overrides.melodyVelocity != null
+                ? overrides.melodyVelocity
+                : (moodConfig.melodyVelocity != null ? moodConfig.melodyVelocity : 0.11);
+
+            for (let c = 0; c < chordsPerPhrase; c++) {
+                const chord = chords[(startChordIndex + c) % chords.length];
+                const indices = chord.indices || [];
+                const chordFreqs = indices.map(i => scale[i]).filter(Boolean);
+                if (!chordFreqs.length) continue;
+
+                const chordStartBeat = c * beatsPerChord;
+                const chordStartTime = chordStartBeat * secPerBeat;
+
+                // ========= 持续低音 / 根音 =========
+                const bassIndexRaw = (typeof chord.bassIndex === 'number')
+                    ? chord.bassIndex
+                    : (typeof chord.rootIndex === 'number' ? chord.rootIndex : indices[0]);
+                let bassFreq = scale[bassIndexRaw] || chordFreqs[0];
+                if (bassOctaveDown) bassFreq *= 0.5;
+
+                const bassBeats = overrides.bassBeats || beatsPerChord;
+                const bassDuration = bassBeats * secPerBeat * (overrides.bassSustainFactor || 0.95);
+
+                notes.push({
+                    freqs: [bassFreq],
+                    offset: chordStartTime,
+                    duration: bassDuration,
+                    velocity: bassVelocity,
+                    vibrato: !!overrides.bassVibrato
+                });
+
+                // ========= 分解和弦 / 旋律 =========
+                const pattern = patternSelector({
+                    mood,
+                    chordIndexWithinPhrase: c,
+                    isResponse,
+                    chord,
+                    chordFreqs
+                }) || {};
+
+                const order = (pattern.order && pattern.order.length)
+                    ? pattern.order
+                    : [0, 1, 2, 1];
+                const subdiv = pattern.subdivisionBeats || overrides.arpeggioSubdivision || moodConfig.arpeggioSubdivision || 0.5;
+                const steps = Math.max(1, Math.floor(beatsPerChord / subdiv));
+                const noteBeats = pattern.noteBeats || subdiv * 0.9;
+
+                for (let s = 0; s < steps; s++) {
+                    const stepBeat = chordStartBeat + s * subdiv;
+                    const stepTime = stepBeat * secPerBeat;
+                    const duration = noteBeats * secPerBeat;
+
+                    const patternIndex = order[s % order.length];
+                    const idx = Math.max(0, Math.min(chordFreqs.length - 1, patternIndex));
+                    let freq = chordFreqs[idx];
+
+                    if (typeof pattern.pitchTransform === 'function') {
+                        freq = pattern.pitchTransform(freq, {
+                            scale,
+                            chord,
+                            chordFreqs,
+                            stepIndex: s,
+                            chordIndexWithinPhrase: c
+                        }) || freq;
+                    }
+
+                    let vel = melodyVelocity;
+                    if (overrides.accentFirst && s === 0) vel *= 1.2;
+                    if (Array.isArray(pattern.accent) && pattern.accent.includes(s)) vel *= 1.15;
+                    vel = Math.min(0.16, Math.max(0.05, vel));
+
+                    notes.push({
+                        freqs: [freq],
+                        offset: stepTime,
+                        duration,
+                        velocity: vel,
+                        vibrato: !!overrides.melodyVibrato
+                    });
+                }
+
+                // ========= 顶音持续：为 title / romantic / majestic 增加抒情线条 =========
+                if (overrides.sustainTop) {
+                    const topFreq = chordFreqs[chordFreqs.length - 1];
+                    const sustainFactor = overrides.sustainTopLengthFactor || 0.75;
+                    const topDuration = beatsPerChord * sustainFactor * secPerBeat;
+                    notes.push({
+                        freqs: [topFreq],
+                        offset: chordStartTime + beatsPerChord * 0.25 * secPerBeat,
+                        duration: topDuration,
+                        velocity: Math.min(0.13, melodyVelocity * 0.7),
+                        vibrato: !!overrides.topVibrato
+                    });
+                }
+            }
+
+            // 更新问句/答句状态
+            this.phraseIndex = (startChordIndex + chordsPerPhrase) % chords.length;
+            this.phraseIsResponse = !isResponse;
+
+            return { notes, duration: phraseDuration };
+        },
+
+        // 根据不同情绪调用不同的乐句生成逻辑
+        generateMelody(mood) {
+            const m = mood || this.currentMood || 'calm';
+            switch (m) {
+                case 'title':
+                    // 标题：Am→C→G→Em，缓慢分解和弦，低音与高音都带轻微颤音
+                    return this._buildPhrase('title', {
+                        bpm: 58,
+                        beatsPerChord: 4,
+                        chordsPerPhrase: 4,
+                        arpeggioSubdivision: 0.5,
+                        melodyVelocity: 0.09,
+                        bassVelocity: 0.11,
+                        bassOctaveDown: true,
+                        bassVibrato: true,
+                        melodyVibrato: false,
+                        sustainTop: true,
+                        topVibrato: true,
+                        accentFirst: true
+                    }, ({ isResponse }) => {
+                        // 问句：上行；答句：下行
+                        return isResponse
+                            ? { order: [2, 1, 0, 1, 2, 1], subdivisionBeats: 0.5 }
+                            : { order: [0, 1, 2, 1, 0, 1], subdivisionBeats: 0.5 };
+                    });
+
+                case 'calm':
+                    // calm：柔和流水式分解和弦，轻微起伏
+                    return this._buildPhrase('calm', {
+                        bpm: 72,
+                        arpeggioSubdivision: 0.5,
+                        melodyVelocity: 0.10,
+                        bassVelocity: 0.08,
+                        bassOctaveDown: true,
+                        bassVibrato: false,
+                        melodyVibrato: false,
+                        sustainTop: false,
+                        accentFirst: true
+                    }, ({ isResponse, chordIndexWithinPhrase }) => {
+                        if (chordIndexWithinPhrase === 3) {
+                            // 第四个和弦略强调，作为收束
+                            return { order: [2, 1, 0, 1], subdivisionBeats: 0.5, accent: [0, 2] };
+                        }
+                        return isResponse
+                            ? { order: [2, 1, 0, 1], subdivisionBeats: 0.5 }
+                            : { order: [0, 1, 2, 1], subdivisionBeats: 0.5 };
+                    });
+
+                case 'tense':
+                    // tense：更细密的十六分分解和弦，音程跳跃大，节奏紧张
+                    return this._buildPhrase('tense', {
+                        bpm: 110,
+                        arpeggioSubdivision: 0.25,
+                        melodyVelocity: 0.11,
+                        bassVelocity: 0.10,
+                        bassOctaveDown: true,
+                        bassVibrato: false,
+                        melodyVibrato: false,
+                        sustainTop: false,
+                        accentFirst: true
+                    }, ({ chordFreqs, chordIndexWithinPhrase }) => {
+                        const baseOrder = chordIndexWithinPhrase % 2 === 0
+                            ? [0, 2, 1, 2, 3, 2, 1, 2]
+                            : [2, 1, 0, 1, 3, 2, 1, 0];
+                        return {
+                            order: baseOrder,
+                            subdivisionBeats: 0.25,
+                            noteBeats: 0.25,
+                            pitchTransform: (freq, ctx) => {
+                                // 偶尔跳上高八度或跳到和弦最高音，加一点紧张感
+                                if (Math.random() < 0.18) {
+                                    const top = ctx.chordFreqs[ctx.chordFreqs.length - 1];
+                                    return Math.random() < 0.5 ? top : freq * 2;
+                                }
+                                return freq;
+                            },
+                            accent: [0, 2, 4]
+                        };
+                    });
+
+                case 'romantic':
+                    // romantic：节奏舒缓，音长略拉长，整体温暖
+                    return this._buildPhrase('romantic', {
+                        bpm: 76,
+                        arpeggioSubdivision: 0.5,
+                        melodyVelocity: 0.11,
+                        bassVelocity: 0.08,
+                        bassOctaveDown: true,
+                        bassVibrato: true,
+                        melodyVibrato: false,
+                        sustainTop: true,
+                        topVibrato: true,
+                        sustainTopLengthFactor: 0.85,
+                        accentFirst: true
+                    }, ({ isResponse }) => {
+                        return isResponse
+                            ? { order: [2, 1, 0, 1, 2], subdivisionBeats: 0.5 }
+                            : { order: [0, 1, 2, 1, 1], subdivisionBeats: 0.5 };
+                    });
+
+                case 'mysterious':
+                    // mysterious：极少量的点缀音，主要靠低音 drone 营造空间感
+                    return this._buildPhrase('mysterious', {
+                        bpm: 60,
+                        beatsPerChord: 4,
+                        chordsPerPhrase: 2,
+                        arpeggioSubdivision: 2.0,
+                        melodyVelocity: 0.08,
+                        bassVelocity: 0.07,
+                        bassOctaveDown: true,
+                        bassVibrato: true,
+                        melodyVibrato: false,
+                        sustainTop: false,
+                        bassSustainFactor: 1.0
+                    }, ({ chordIndexWithinPhrase }) => {
+                        if (chordIndexWithinPhrase === 0) {
+                            return { order: [0], subdivisionBeats: 4.0, noteBeats: 2.5 };
+                        }
+                        return { order: [2], subdivisionBeats: 4.0, noteBeats: 2.5 };
+                    });
+
+                case 'majestic':
+                    // majestic：有推进感的分解和弦，顶音持续加强庄严感
+                    return this._buildPhrase('majestic', {
+                        bpm: 90,
+                        arpeggioSubdivision: 0.5,
+                        melodyVelocity: 0.12,
+                        bassVelocity: 0.10,
+                        bassOctaveDown: true,
+                        bassVibrato: true,
+                        melodyVibrato: false,
+                        sustainTop: true,
+                        topVibrato: true,
+                        accentFirst: true
+                    }, ({ chordIndexWithinPhrase }) => {
+                        if (chordIndexWithinPhrase === 3) {
+                            // 终止和弦略向上，营造收束的强烈感
+                            return { order: [0, 1, 2, 1, 2, 1], subdivisionBeats: 0.5, accent: [0, 3] };
+                        }
+                        return { order: [0, 1, 2, 1], subdivisionBeats: 0.5 };
+                    });
+
+                default:
+                    return this._buildPhrase('calm', {
+                        bpm: 72,
+                        arpeggioSubdivision: 0.5,
+                        melodyVelocity: 0.10,
+                        bassVelocity: 0.08,
+                        bassOctaveDown: true,
+                        bassVibrato: false,
+                        melodyVibrato: false,
+                        sustainTop: false,
+                        accentFirst: true
+                    }, ({ isResponse }) => {
+                        return isResponse
+                            ? { order: [2, 1, 0, 1], subdivisionBeats: 0.5 }
+                            : { order: [0, 1, 2, 1], subdivisionBeats: 0.5 };
+                    });
+            }
+        },
+
+        // 实际将乐句调度到 AudioContext 中播放
+        playPhrase(mood) {
+            if (!this.isPlaying || this.isMuted || !this.ctx) return 0;
+
+            const phrase = this.generateMelody(mood);
+            if (!phrase || !phrase.notes || !phrase.notes.length) return 0;
+
+            const baseTime = this.ctx.currentTime + 0.05;
+            phrase.notes.forEach(note => {
+                if (!note) return;
+                const freqs = Array.isArray(note.freqs)
+                    ? note.freqs
+                    : (typeof note.freq === 'number' ? [note.freq] : []);
+                if (!freqs.length) return;
+
+                const offset = note.offset || 0;
+                const duration = note.duration || 0.2;
+                const velocity = note.velocity != null ? note.velocity : 0.1;
+                const vibrato = !!note.vibrato;
+
+                const options = {
+                    vibrato
+                };
+                if (note.attack != null) options.attack = note.attack;
+                if (note.decay != null) options.decay = note.decay;
+                if (note.release != null) options.release = note.release;
+
+                const startTime = baseTime + offset;
+                freqs.forEach(f => {
+                    if (f > 0) {
+                        this.playNote(f, startTime, duration, velocity, options);
+                    }
+                });
+            });
+
+            return phrase.duration || 4;
+        },
+
+        // ================== 播放循环与情绪切换 ==================
+
+        startLoop(mood) {
+            this.currentMood = mood || 'calm';
+            const config = this.moods[this.currentMood] || {};
+
+            this.phraseIndex = 0;
+            this.phraseIsResponse = false;
+
+            if (this.filter && this.ctx) {
+                this.filter.frequency.setTargetAtTime(
+                    config.filterFreq || 1200,
+                    this.ctx.currentTime,
+                    0.05
+                );
+            }
+            if (this.reverbGain && this.ctx && typeof config.reverbMix === 'number') {
+                this.reverbGain.gain.setTargetAtTime(
+                    config.reverbMix,
+                    this.ctx.currentTime,
+                    0.1
+                );
+            }
+
+            const scale = this.scales[this.currentMood];
+            if (scale && scale.length && this.ctx) {
+                const root = scale[0];
+
+                if (this.currentMood === 'title') {
+                    // 标题：低八度 + 原位持续低音，略带颤音
+                    this.playDrone(root * 0.5, 18, 0.11, { vibrato: true });
+                    this.playDrone(root, 24, 0.08, { vibrato: true });
+
+                    const highDroneId = setTimeout(() => {
+                        if (!this.isPlaying || this.currentMood !== 'title') return;
+                        const high = scale[6] || root * 2;
+                        this.playDrone(high, 20, 0.06, { vibrato: true });
+                    }, 2000);
+                    this.intervalIds.push(highDroneId);
+                } else if (this.currentMood === 'mysterious') {
+                    // 神秘：极低音 drone
+                    this.playDrone(root * 0.5, 26, 0.07, { vibrato: false });
+                } else if (this.currentMood === 'majestic') {
+                    // 庄严：扎实的低音
+                    this.playDrone(root * 0.5, 22, 0.10, { vibrato: true });
+                } else {
+                    // 其它：适度低音烘托
+                    this.playDrone(root * 0.5, 18, 0.08, { vibrato: false });
+                }
+            }
+
+            // 旋律主层循环
+            const playMain = () => {
+                if (!this.isPlaying) return;
+                const duration = this.playPhrase(this.currentMood);
+                const baseDelay = (duration || 4) * 1000;
+                let extra = 0;
+                switch (this.currentMood) {
+                    case 'tense':
+                        extra = 200 + Math.random() * 600;
+                        break;
+                    case 'mysterious':
+                        extra = 800 + Math.random() * 1200;
+                        break;
+                    case 'title':
+                        extra = 1500 + Math.random() * 2000;
+                        break;
+                    default:
+                        extra = 600 + Math.random() * 1000;
+                        break;
+                }
+                const id = setTimeout(playMain, baseDelay + extra);
+                this.intervalIds.push(id);
+            };
+            playMain();
+
+            // 第二旋律层：轻微错位进入，形成呼应
+            if (config.layers >= 2) {
+                const delayMs = this.currentMood === 'title' ? 4000 : 2500;
+                const id2 = setTimeout(() => {
+                    if (!this.isPlaying) return;
+                    const secondary = () => {
+                        if (!this.isPlaying) return;
+                        const dur = this.playPhrase(this.currentMood);
+                        const baseDelay = (dur || 4.5) * 1000;
+                        let extra = 0;
+                        switch (this.currentMood) {
+                            case 'tense':
+                                extra = 500 + Math.random() * 800;
+                                break;
+                            case 'mysterious':
+                                extra = 1200 + Math.random() * 1600;
+                                break;
+                            default:
+                                extra = 800 + Math.random() * 1200;
+                                break;
+                        }
+                        const sid = setTimeout(secondary, baseDelay + extra);
+                        this.intervalIds.push(sid);
+                    };
+                    secondary();
+                }, delayMs);
+                this.intervalIds.push(id2);
+            }
+
+            // 第三层点缀（主要用于 title / majestic 的低音点缀）
+            if ((this.currentMood === 'title' || this.currentMood === 'majestic') && config.layers >= 3 && scale && scale.length) {
+                const id3 = setTimeout(() => {
+                    if (!this.isPlaying) return;
+                    const lowAccent = () => {
+                        if (!this.isPlaying || (this.currentMood !== 'title' && this.currentMood !== 'majestic')) return;
+                        const lowScale = scale.slice(0, 5);
+                        const freq = lowScale[Math.floor(Math.random() * lowScale.length)] * 0.5;
+                        const now = this.ctx.currentTime;
+                        this.playNote(freq, now, 3.2, 0.10, { vibrato: false });
+                        const nextT = 6000 + Math.random() * 4000;
+                        const tid = setTimeout(lowAccent, nextT);
+                        this.intervalIds.push(tid);
+                    };
+                    lowAccent();
+                }, 5000);
+                this.intervalIds.push(id3);
+            }
+
+            // 长时间间隔的 drone 续接
+            if (scale && scale.length) {
+                const droneLoop = () => {
+                    if (!this.isPlaying) return;
+                    let freq = scale[0];
+                    if (this.currentMood === 'tense' && scale[1]) {
+                        freq = scale[1];
+                    } else if (this.currentMood === 'romantic') {
+                        freq = scale[0] * 0.5;
+                    }
+                    const baseFreq = this.currentMood === 'mysterious' ? freq * 0.5 : freq * 0.5;
+                    this.playDrone(baseFreq, 20, 0.07, { vibrato: this.currentMood !== 'tense' });
+                    const base = 20000;
+                    const jitter = 4000;
+                    const did = setTimeout(droneLoop, base + Math.random() * jitter);
+                    this.intervalIds.push(did);
+                };
+                const droneId = setTimeout(droneLoop, 20000);
+                this.intervalIds.push(droneId);
+            }
+        },
+
+        // 切换音乐氛围
+        changeMood(newMood) {
+            if (newMood === this.currentMood) return;
+            if (!this.moods[newMood]) return;
+
+            this.currentMood = newMood;
+            this.stop();
+
+            // 短暂停顿后以新氛围开始，营造过渡感
+            const transitionId = setTimeout(() => {
+                this.isPlaying = true;
+                this.startLoop(newMood);
+                this.updateMusicIcon();
+            }, 1500);
+            this.intervalIds.push(transitionId);
+        },
+
+        start(mood) {
+            this.init();
+            if (!this.ctx) return;
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+            this.isPlaying = true;
+            this.startLoop(mood || 'calm');
+            this.updateMusicIcon();
+        },
+
+        stop() {
+            this.isPlaying = false;
+            this.intervalIds.forEach(id => clearTimeout(id));
+            this.intervalIds = [];
+            this.oscillators.forEach(osc => {
+                if (!osc) return;
+                try { osc.stop(); } catch (e) { /* 已停止则忽略 */ }
+            });
+            this.oscillators = [];
+        },
+
+        // ================== 音量 / 静音控制接口 ==================
+
+        toggleMute() {
+            this.isMuted = !this.isMuted;
+            if (this.masterGain && this.ctx) {
+                const now = this.ctx.currentTime;
+                this.masterGain.gain.cancelScheduledValues(now);
+                if (this.isMuted) {
+                    // 静音：快速淡出
+                    const current = this.masterGain.gain.value;
+                    this.masterGain.gain.setValueAtTime(current, now);
+                    this.masterGain.gain.linearRampToValueAtTime(0, now + 0.1);
+                } else {
+                    // 取消静音：平滑恢复当前设定音量
+                    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value || 0, now);
+                    this.masterGain.gain.linearRampToValueAtTime(this.volume, now + 0.3);
+                }
+            }
+            this.updateMusicIcon();
+        },
+
+        /**
+         * 设置音量（0~100 映射到 0.0~0.5 的 masterGain）
+         */
+        setVolume(value) {
+            const v = isNaN(value) ? 0 : Math.max(0, Math.min(100, value));
+            const gainValue = (v / 100) * 0.5;
+            this.volume = gainValue;
+
+            if (this.masterGain && this.ctx) {
+                const now = this.ctx.currentTime;
+                this.masterGain.gain.cancelScheduledValues(now);
+                if (this.isMuted) {
+                    // 静音状态下只记录音量，不抬升主增益
+                    this.masterGain.gain.setValueAtTime(0, now);
+                } else {
+                    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+                    this.masterGain.gain.linearRampToValueAtTime(gainValue, now + 0.15);
+                }
+            }
+        },
+
+        /**
+         * 获取当前音量（0~100）
+         */
+        getVolume() {
+            const v = this.volume != null ? this.volume : 0;
+            return Math.round((v / 0.5) * 100);
+        },
+
+        // ================== UI 图标更新 ==================
+
+        updateMusicIcon() {
+            const btn = document.getElementById('music-btn');
+            const splashBtn = document.getElementById('splash-music-btn');
+            const muteIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+            const playIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/></svg>`;
+            const isSilent = this.isMuted || !this.isPlaying;
+            if (btn) {
+                btn.innerHTML = isSilent ? muteIcon : playIcon;
+                btn.title = isSilent ? '开启音乐' : '静音';
+            }
+            // 启动画面按钮
+            if (splashBtn) {
+                const smallMute = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+                const smallPlay = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/></svg>`;
+                splashBtn.innerHTML = isSilent ? smallMute : smallPlay;
+            }
+            const namingBtn = document.getElementById('naming-music-btn');
+            if (namingBtn) {
+                const smallMute = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+                const smallPlay = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/></svg>`;
+                namingBtn.innerHTML = isSilent ? smallMute : smallPlay;
+            }
+        }
+    };
+
+    // ============ 场景音乐映射（保持不变） ============
+    const sceneMoodMap = {
+        'start': 'calm',
+        'start_friend': 'calm',
+        'start_silent': 'mysterious',
+        'start_inquire': 'mysterious',
+        'start_strategy': 'tense',
+        'visit_queen': 'tense',
+        'visit_consort': 'mysterious',
+        'visit_fallen': 'romantic',
+        'visit_fallen_invited': 'romantic',
+        'visit_fallen_secret': 'mysterious',
+        'fallen_honest': 'majestic',
+        'fallen_half': 'calm',
+        'fallen_deny': 'calm',
+        'fallen_promise': 'romantic',
+        'fallen_ask_more': 'tense',
+        'fallen_motive': 'mysterious',
+        'fallen_ask_prince': 'romantic',
+        'queen_debrief': 'calm',
+        'garden_observe': 'mysterious',
+        'queen_investigate': 'tense',
+        'join_consort': 'tense',
+        'stay_neutral_consort': 'calm',
+        'consort_discuss': 'calm',
+        'after_visits': 'majestic',
+        'emperor_humble': 'tense',
+        'emperor_flirt': 'tense',
+        'emperor_test': 'tense',
+        'chapter1_end': 'majestic',
+        'chapter2_preview': 'romantic'
+    };
+</script>

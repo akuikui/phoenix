@@ -1,0 +1,531 @@
+<script>
+    // ===== 第四幕：翻案风暴 & 终幕：结局分歧 =====
+    
+    storyNodes['ch4_start'] = {
+        location: '后宫 · 永安殿',
+        time: '永昭九年 · 春',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.3rem;margin-bottom:2rem;">—— 第四幕 · 翻案风暴 ——</p>
+            <p>永昭九年开春，万物复苏——而你的翻案计划也终于走到了最关键的阶段。</p>
+            <p>经过数月的暗中搜集，你手中的证据链已初具规模：</p>
+            <p class="narration">一、沈翰林手书密信——记录周坤密会北狄细作的经过（贤妃处获得）。</p>
+            <p class="narration">二、周坤与北狄联络信物——瑾王在边关截获的实物证据。</p>
+            <p class="narration">三、兵部调令伪造线索——顾行之在翰林院发现印章有异。</p>
+            <p class="narration">四、刑部知情者——张怀远，或知当年审案内幕（三皇子提供）。</p>
+            <p>但要翻案，仅有证据不够——还需要一个能将这些证据呈到皇帝面前的"契机"。否则，私自查探旧案本身就是大罪。</p>
+            <p>就在此时，一个天赐良机出现了——</p>
+            <p>朝堂之上，御史弹劾兵部贪墨军饷。皇帝震怒，下令彻查兵部。查案的风潮让整个兵部人人自危——这意味着兵部档案库将被开放查阅！</p>
+            <p>顾行之连夜传来纸条：</p>
+            <p class="dialogue" style="font-style:italic;">"千载难逢。我已想办法混入查案组。调令原件——三日内可取。"</p>
+            <p class="thought">终于……最关键的那块拼图即将到手！</p>
+        `,
+        choices: [
+            {
+                text: '全力配合——通知瑾王和三皇子做好准备，等调令到手便启动翻案',
+                next: 'ch4_coordinate',
+                effects: { case: 10, safety: -5 }
+            },
+            {
+                text: '让顾行之小心行事——兵部查案期间戒备森严，一旦被发现后果不堪设想',
+                next: 'ch4_careful',
+                effects: { case: 5, safety: 3, affection: { gxz: 5 } }
+            },
+            {
+                text: '同时从皇帝身边入手——趁他因兵部案震怒之际，找机会在他面前"不经意"提起旧案疑点',
+                next: 'ch4_emperor_angle',
+                effects: { case: 8, affection: { xcy: 5 }, safety: -8 },
+                warning: '极大胆'
+            }
+        ]
+    };
+
+    storyNodes['ch4_coordinate'] = {
+        location: '各暗线联络',
+        time: '永昭九年 · 春',
+        text: `
+            <p>你通过各条暗线发出了统一的信号——准备行动。</p>
+            <p>瑾王回信：已在朝堂上暗中配合御史发力，让兵部查案的范围扩大。</p>
+            <p>三皇子传话：张怀远已被说动，愿意在适当时机出面作证。但他要求保证自身安全。</p>
+            <p>三日后——顾行之不负所托，成功从兵部档案库中抄录了那份关键调令的副本。原件太危险无法带出，但副本上清晰可见：调令上的兵部印章与同期其他文书的印章存在明显差异——是伪造的！</p>
+            <p class="thought">证据链终于闭合了。现在需要的只是——一个呈递的时机，和一个不会被截杀的方式。</p>
+            <p>然而就在一切看似顺利之时——意外发生了。</p>
+            <p>一日清晨，你发现苏婉宁的房间空着。她整夜未归。直到午后她才面色苍白地回来，见到你时眼神闪躲。</p>
+            <p class="dialogue">"婉宁？你去哪了？"</p>
+            <p>她没有回答，只是支吾着说"身子不舒服去太医院了"。但太医院的方向……不是她去的方向。</p>
+            <p class="thought">不对劲。她在隐瞒什么？</p>
+        `,
+        choices: [
+            {
+                text: '追问到底——"婉宁，看着我。发生什么事了？"',
+                next: 'ch4_swn_crisis',
+                effects: { trust: { swn: 5 } }
+            },
+            {
+                text: '暂时不追问，暗中观察她接下来的行为',
+                next: 'ch4_swn_observe',
+                effects: { safety: 3 }
+            },
+            {
+                text: '直接问她——"你是不是去了毓秀宫？淑妃让你做什么了？"',
+                next: 'ch4_swn_confront',
+                effects: { trust: { swn: -5 }, safety: 5 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_careful'] = {
+        location: '永安殿',
+        time: '永昭九年 · 春',
+        text: `
+            <p>你传信让顾行之务必小心。他回信道：</p>
+            <p class="dialogue" style="font-style:italic;">"师妹放心，我自有分寸。"</p>
+            <p>五日后——调令副本安全到手。顾行之没有被发现。证据链闭合了。</p>
+            <p>接下来你将面临同样的困境：如何安全地呈递证据？以及——身边潜伏的危机。</p>
+            <p>苏婉宁近日行为反常，时常外出不归……</p>
+        `,
+        effects: { clue: '兵部伪造调令副本（关键物证）' },
+        choices: [
+            {
+                text: '关注苏婉宁的异常——她是你最亲近的人，不能出问题',
+                next: 'ch4_swn_crisis',
+                effects: { trust: { swn: 5 } }
+            },
+            {
+                text: '先不管苏婉宁，全力筹划呈递证据的方式',
+                next: 'ch4_present_plan',
+                effects: { case: 5, safety: -3 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_emperor_angle'] = {
+        location: '养心殿',
+        time: '永昭九年 · 春',
+        text: `
+            <p>你在养心殿抚琴时，趁皇帝因兵部贪墨案心烦之际，"无意"间叹了口气。</p>
+            <p class="dialogue">"怎么？弹得心不在焉。"皇帝抬眼看你。</p>
+            <p class="dialogue">"臣妾失态……只是听闻兵部出了事，想起了些旧事。"你垂眸，声音带着恰到好处的伤感，"家父从前……也曾因兵部的事获罪。世事无常。"</p>
+            <p>皇帝的动作顿了顿。他放下笔，看你的目光变得锐利。</p>
+            <p class="dialogue">"你又提你父亲。"他的语气冷了几分，"朕上次警告过你。"</p>
+            <p class="dialogue">"臣妾知罪。"你立刻跪下，"只是……如今兵部弊案频出，臣妾偶尔会想——当年父亲的案子，会不会也有人做了手脚？"</p>
+            <p>死一般的沉默。你的心跳几乎要冲破胸腔。</p>
+            <p>最终皇帝开口了，语气莫测：</p>
+            <p class="dialogue">"……若真有人做了手脚——你有证据吗？"</p>
+            <p class="thought">他问了。他问的是"有没有证据"——而不是"住口"。这意味着……他并非完全不愿重审此案！</p>
+        `,
+        choices: [
+            {
+                text: '"臣妾……正在搜集。若得陛下恩准——臣妾愿呈上所有证据，请陛下圣裁。"',
+                next: 'ch4_emperor_permission',
+                effects: { case: 15, affection: { xcy: 10 }, safety: -10 },
+                warning: '此选择不可逆 · 将走向皇帝线翻案'
+            },
+            {
+                text: '见好就收——"臣妾不敢妄言。只是……若陛下有朝一日愿意重新审视，臣妾感激涕零。"',
+                next: 'ch4_swn_crisis',
+                effects: { case: 8, affection: { xcy: 5 }, safety: 3 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_swn_crisis'] = {
+        location: '永安殿',
+        time: '永昭九年 · 春',
+        text: `
+            <p>你拉住苏婉宁的手，认真地看着她的眼睛。</p>
+            <p class="dialogue">"婉宁，你是不是遇到了什么难处？告诉我——无论什么事，我们一起面对。"</p>
+            <p>苏婉宁的嘴唇颤抖了。终于——她崩溃了，眼泪夺眶而出。</p>
+            <p class="dialogue">"姐姐……对不起……"她哽咽道，"淑妃娘娘她……她让我打听你最近在做什么、见了什么人。我、我没有说！我什么都没说！但她一直在逼我……说如果我不听话就收回给我弟弟治病的银子……"</p>
+            <p>你的心沉了下去。果然——淑妃在利用苏婉宁监视你。</p>
+            <p class="dialogue">"我真的没有出卖你！"苏婉宁抓着你的手，哭得上气不接下气，"但我不知道该怎么办……姐姐，我是不是很没用……"</p>
+            <p class="thought">关键时刻。苏婉宁没有背叛你——但她正处于崩溃边缘。你的下一步选择，将决定她是彻底站在你这边，还是被逼入绝境后做出不可挽回的事。</p>
+        `,
+        choices: [
+            {
+                text: '紧紧抱住她——"我知道。我信你。从今以后——你的弟弟我来想办法，你不需要再欠淑妃任何东西。"',
+                next: 'ch4_present_plan',
+                effects: { trust: { swn: 25 }, safety: -3 }
+            },
+            {
+                text: '冷静分析——"婉宁，我需要你做一件事。继续假装听从淑妃——但只告诉她无关紧要的假消息。你能做到吗？"',
+                next: 'ch4_present_plan',
+                effects: { trust: { swn: 10 }, safety: 8 }
+            },
+            {
+                text: '虽然心疼但必须确认——"你真的什么都没说？我最近的行踪、见过的人——一个字都没有透露？"',
+                next: 'ch4_present_plan',
+                effects: { trust: { swn: -5 }, safety: 5 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_swn_observe'] = {
+        location: '永安殿',
+        time: '春',
+        text: `
+            <p>你决定暂时不打草惊蛇，暗中观察。</p>
+            <p>连续几日，你发现苏婉宁确实频繁出入毓秀宫方向，每次回来都面色凝重。但她对你的态度没有改变——依旧亲近、温暖，只是多了一份欲言又止的纠结。</p>
+            <p class="thought">她在承受着什么压力……但至少目前，她没有出卖你的迹象。</p>
+            <p>你决定先集中精力在翻案上——等尘埃落定后再解决苏婉宁的问题。</p>
+        `,
+        choices: [
+            {
+                text: '继续推进翻案',
+                next: 'ch4_present_plan',
+                effects: { case: 3, safety: 2 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_swn_confront'] = {
+        location: '永安殿',
+        time: '春',
+        text: `
+            <p>苏婉宁听到你直接点出淑妃时，脸色惨白。</p>
+            <p class="dialogue">"你……你怎么知道……"</p>
+            <p>她终于坦白了一切——淑妃以银钱为饵让她监视你。但她发誓没有透露任何实质性信息。</p>
+            <p>你冷静地听完，心中虽有复杂情绪，但此刻最重要的是控制局面。</p>
+            <p class="dialogue">"我信你。但从现在开始——淑妃再问你什么，你就告诉她'沈采女每日只是练琴读书，不见外人'。明白吗？"</p>
+            <p>苏婉宁含泪点头。</p>
+        `,
+        choices: [
+            {
+                text: '继续翻案计划',
+                next: 'ch4_present_plan',
+                effects: { trust: { swn: 5 }, safety: 5 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_emperor_permission'] = {
+        location: '养心殿',
+        time: '永昭九年 · 春',
+        text: `
+            <p>你跪在养心殿的金砖上，说出了那句你筹划已久的话。</p>
+            <p class="dialogue">"臣妾……正在搜集证据。若蒙陛下恩准——臣妾愿将所有证据呈上，请陛下圣裁。"</p>
+            <p>皇帝的目光如鹰隼般锐利地盯着你。长久的沉默后——</p>
+            <p class="dialogue">"你有胆量。"他的语气说不清是赞许还是警告，"但你可知——若证据不实，便是欺君之罪？"</p>
+            <p class="dialogue">"臣妾愿以性命担保。"</p>
+            <p>又是一阵沉默。然后皇帝做了一件出乎你意料的事——他轻轻挥了挥手。</p>
+            <p class="dialogue">"给你十日。十日后——将证据呈到朕面前。朕……亲自看。"</p>
+            <p class="thought">他答应了。帝王金口一开——你有了十日时间整合所有证据！</p>
+            <p>但你也清楚：这十日内，你的一举一动都在皇帝的监视之下。任何闪失都可能万劫不复。</p>
+        `,
+        effects: { case: 20, flags: { emperor_permission: true }, rank: -3, affection: { xcy: 15 } },
+        choices: [
+            {
+                text: '十日之内完成最终整合——通知所有同盟者准备',
+                next: 'ch4_present_plan',
+                effects: { case: 10 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_present_plan'] = {
+        location: '永安殿',
+        time: '永昭九年 · 暮春',
+        text: `
+            <p>一切准备就绪。证据链完整，同盟者各就各位。</p>
+            <p>最终的呈递方式，你需要做一个选择——这将决定翻案的走向，也决定你最终的命运。</p>
+            <p class="narration">方式一：通过皇帝直接呈递。最正统，但需要说服帝王推翻自己曾经的判决——等于让他承认自己被蒙蔽。</p>
+            <p class="narration">方式二：通过三皇子在朝堂上公开弹劾。声势浩大，但会直接与郑家和皇后正面对抗——风险极高。</p>
+            <p class="narration">方式三：通过瑾王暗中运作，让御史台"独立发现"证据后上奏。最安全，但瑾王会借此扩大自身势力——你需要考虑后果。</p>
+        `,
+        choices: [
+            {
+                text: '选择通过皇帝直接呈递——最直接，也最能保全帝王颜面',
+                next: 'ch4_finale_emperor',
+                effects: { case: 10, affection: { xcy: 10 }, safety: -5 }
+            },
+            {
+                text: '选择通过三皇子公开弹劾——雷厉风行，一举击溃郑家',
+                next: 'ch4_finale_prince3',
+                effects: { case: 10, affection: { xjy: 10 }, safety: -10 }
+            },
+            {
+                text: '选择通过瑾王暗中运作——最安全的方式',
+                next: 'ch4_finale_prince_xch',
+                effects: { case: 10, affection: { xch: 10 }, safety: 5 }
+            }
+        ]
+    };
+
+    // ===== 终幕 · 翻案结果与多结局 =====
+    storyNodes['ch4_finale_emperor'] = {
+        location: '养心殿',
+        time: '永昭九年 · 初夏',
+        text: `
+            <p>你将所有证据整合成一份完整的呈文，在第十日的清晨跪呈御前。</p>
+            <p>皇帝花了整整一个时辰阅读。期间他的面色几度变化——震怒、疑惑、沉思。</p>
+            <p>最终他合上了呈文，长久地注视着你。</p>
+            <p class="dialogue">"沈彦清……是被冤枉的。"他的声音很轻，但每个字都重若千钧，"周坤……郑家……"</p>
+            <p>他猛地站起身来，将桌上的砚台摔在地上——那是你入宫以来第一次见帝王动怒。</p>
+            <p class="dialogue">"来人！传大理寺卿、刑部尚书——即刻入宫！"</p>
+            <p class="thought">成了。翻案——成了！</p>
+            <p>永昭九年夏，皇帝下旨重审沈彦清案。周坤被捕入狱，郑家元气大伤。皇后虽未被直接牵连，但已失去了最大的助力。</p>
+            <p>你的父亲——终于沉冤得雪。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.3rem;">—— 翻案成功 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.9rem;">根据你此前的选择，命运将走向不同的终局……</p>
+        `,
+        effects: { case: 30 },
+        choices: [
+            { text: '走向结局', next: 'ending_branch', effects: {} }
+        ]
+    };
+
+    storyNodes['ch4_finale_prince3'] = {
+        location: '朝堂',
+        time: '永昭九年 · 初夏',
+        text: `
+            <p>三皇子萧璟言联合数名清流御史，在早朝上公开弹劾兵部侍郎周坤"当年伪证构陷忠良"。铁证如山——调令伪造副本、周坤通敌信物、张怀远的当堂作证——如同一记重锤砸向了郑家。</p>
+            <p>朝堂大哗。皇帝震怒之下命三司会审。</p>
+            <p>大皇子萧璟恒在朝堂上面色铁青——他知道，一旦周坤倒台，郑家势力将土崩瓦解，他的储位之路也将布满荆棘。</p>
+            <p>皇后得知消息后"病倒"在坤宁宫——实则暗中布置反击。但证据太充分了——连皇帝都无法袒护。</p>
+            <p>最终，沈彦清案得以昭雪。你的父亲被追封太子太傅，沈家冤案正式翻案。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.3rem;">—— 翻案成功 ——</p>
+        `,
+        effects: { case: 30 },
+        choices: [
+            { text: '走向结局', next: 'ending_branch', effects: {} }
+        ]
+    };
+
+    storyNodes['ch4_finale_prince_xch'] = {
+        location: '瑾王府暗线',
+        time: '永昭九年 · 初夏',
+        text: `
+            <p>瑾王通过他在朝中的人脉，将证据悄无声息地送到了御史台最耿直的一位老御史手中。</p>
+            <p>这位老御史"独立发现"了证据后大义凛然地上奏弹劾。由于证据确凿、且出自"中立第三方"之手，皇帝没有理由拒绝彻查。</p>
+            <p>整个过程中——你、瑾王、三皇子、顾行之无一人暴露。外界看来，这只是一位正直的御史在兵部查案过程中偶然发现了旧案疑点。</p>
+            <p>周坤落网、郑家受创。沈彦清案翻案成功。</p>
+            <p>而瑾王——借此机会在朝中赢得了"正义"的声望，他的暗中势力进一步壮大了。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.3rem;">—— 翻案成功 ——</p>
+        `,
+        effects: { case: 30 },
+        choices: [
+            { text: '走向结局', next: 'ending_branch', effects: {} }
+        ]
+    };
+
+    // ===== 结局分支 =====
+    storyNodes['ending_branch'] = {
+        location: '',
+        time: '永昭九年 · 盛夏之后',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 终 幕 ——</p>
+            <p style="text-align:center;">翻案已成。父亲沉冤昭雪，罪魁祸首伏法。</p>
+            <p style="text-align:center;">而你——站在命运的岔路口上。</p>
+            <p style="text-align:center;margin-top:1.5rem;color:#6B5B4F;">根据你一路走来的选择，你的故事将有不同的结局。</p>
+            <p style="text-align:center;color:#6B5B4F;margin-top:1rem;font-size:0.9rem;">请选择你心中最终的归宿——</p>
+        `,
+        choices: [
+            {
+                text: '🌸 与瑾王远走高飞——离开这吃人的宫廷',
+                next: 'ending_prince',
+                effects: {},
+                condition: () => gameState.affection.xch >= 50
+            },
+            {
+                text: '👑 辅佐三皇子登基，以辅政之权治天下',
+                next: 'ending_regent',
+                effects: {},
+                condition: () => gameState.affection.xjy >= 50
+            },
+            {
+                text: '📜 与顾行之归隐山林，从此不问朝堂',
+                next: 'ending_scholar',
+                effects: {},
+                condition: () => gameState.affection.gxz >= 50
+            },
+            {
+                text: '🐎 随赫连霆去往草原，拥抱自由',
+                next: 'ending_grassland',
+                effects: {},
+                condition: () => gameState.affection.hlt >= 40
+            },
+            {
+                text: '🔥 留在宫中，以己之力攀上权力巅峰',
+                next: 'ending_power',
+                effects: {}
+            }
+        ]
+    };
+
+    storyNodes['ending_prince'] = {
+        location: '京城外 · 官道',
+        time: '盛夏 · 清晨',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 远走结局 · 瑾王线 ——</p>
+            <p>翻案之后，你向皇帝请旨出家——以"为亡父守孝三年"为由离开后宫。皇帝准了。</p>
+            <p>然而马车驶出京城的那一刻，你掀开车帘——路边一棵老柳树下，一个玄衣男子牵着两匹快马，笑意盈盈地看着你。</p>
+            <p class="dialogue">"等你好久了。"萧承珩伸出手，"走吧——去看洛阳的牡丹。我答应过你的。"</p>
+            <p>你脱去宫装，换上利落的骑装，翻身上马。</p>
+            <p>清晨的阳光洒在官道上，前方是无尽的天地。身后——那座困住你多年的宫墙越来越远、越来越小，最终消失在地平线尽头。</p>
+            <p class="dialogue">"珩哥哥——我们去哪？"</p>
+            <p class="dialogue">"去任何你想去的地方。"他策马与你并肩，笑容明朗如少年，"从今以后——天高海阔，再无牢笼。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">你选择了爱情与自由。宫墙之外的人生，才刚刚开始。</p>
+        `,
+        choices: [
+            { text: '🔄 重新开始游戏', next: 'restart', effects: {} }
+        ]
+    };
+
+    storyNodes['ending_regent'] = {
+        location: '大晟皇宫 · 新帝登基',
+        time: '永昭十年',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 垂帘结局 ——</p>
+            <p>翻案风暴之后，郑家倒台、大皇子失势。皇帝因多年劳累加之怒火攻心，龙体日渐衰弱。</p>
+            <p>永昭十年春，皇帝病重传位于三皇子萧璟言。新帝年少初登大宝，根基未稳——而你，以翻案功臣、先帝宠妃的身份被尊为"辅政贵太妃"。</p>
+            <p>从此——大晟的政令虽出自新帝之名，实则皆经你手。你不是太后，却行太后之权；不是皇后，却掌后宫六宫。</p>
+            <p>萧璟言看着坐在珠帘后的你，目光复杂而温柔。</p>
+            <p class="dialogue">"你若想要那个位置——朕可以给你。"他轻声道。</p>
+            <p class="dialogue">"不必。"你微微一笑，"在幕后——比在台前更自在。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">你选择了权力与智慧。垂帘之后，天下尽在掌握。</p>
+        `,
+        choices: [
+            { text: '🔄 重新开始游戏', next: 'restart', effects: {} }
+        ]
+    };
+
+    storyNodes['ending_scholar'] = {
+        location: '江南 · 山间书院',
+        time: '翌年春',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 远走结局 · 状元线 ——</p>
+            <p>翻案成功后，你以守孝之名离宫。顾行之同日辞官——"臣愿归乡著书"，他对皇帝如是说。</p>
+            <p>一个月后，江南某座青山脚下的小书院里，多了两个人。</p>
+            <p>他教书，你抚琴。春日赏花，夏夜观星，秋来读书，冬天围炉煮酒。日子平淡如水，却比宫中的锦衣玉食甘美百倍。</p>
+            <p class="dialogue">"师妹——"某个春日午后，顾行之在你身旁坐下，手中捧着一卷新写的书稿，"帮我看看这篇序文如何？"</p>
+            <p>你接过书稿——扉页上写着："谨以此书献给吾师沈彦清先生，及吾妻沈氏{name}。"</p>
+            <p>你笑着在"吾妻"二字上画了个圈。</p>
+            <p class="dialogue">"这两个字——写得最好。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">你选择了平静与真爱。山间书院，岁月静好。</p>
+        `,
+        choices: [
+            { text: '🔄 重新开始游戏', next: 'restart', effects: {} }
+        ]
+    };
+
+    storyNodes['ending_grassland'] = {
+        location: '北狄 · 赫连部王帐',
+        time: '翌年秋',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 草原结局 ——</p>
+            <p>翻案成功后，和亲谈判最终以互市通商的方式圆满解决。但赫连霆提出了最后一个条件——他要你。</p>
+            <p>出人意料的是——你答应了。</p>
+            <p>不是作为和亲的牺牲品，而是作为一个自由人做出的选择。宫墙太小了，中原的规矩太多了。在那片无垠的草原上——没有妃嫔等级、没有宫规束缚、没有永远需要低头的对象。</p>
+            <p>赫连霆骑着黑色骏马来接你时，笑容灿烂如草原上的烈日。</p>
+            <p class="dialogue">"后悔吗？"他伸出手。</p>
+            <p class="dialogue">"不。"你握住那只布满茧子的大手，翻身上马。</p>
+            <p>马蹄扬尘，草原在脚下无尽延伸。风吹起你的长发——从此以后，你是草原上最自由的女人。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">你选择了自由与远方。天地辽阔，任你驰骋。</p>
+        `,
+        choices: [
+            { text: '🔄 重新开始游戏', next: 'restart', effects: {} }
+        ]
+    };
+
+    storyNodes['ending_power'] = {
+        location: '大晟皇宫',
+        time: '数年后',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 凤临天下结局 ——</p>
+            <p>翻案之后，你没有离开。相反——你选择留在这座宫殿里，用你的智慧一步步攀上权力的巅峰。</p>
+            <p>从采女到才人，从才人到美人，从美人到嫔，从嫔到妃……每一次晋升都伴随着一场精密的博弈。翻案的功绩、皇帝的赏识、前朝的人脉——你将每一张牌都打到了极致。</p>
+            <p>数年后——你坐在凤座之上，俯瞰六宫。</p>
+            <p>皇后。大晟的皇后。</p>
+            <p>那个曾经在掖庭忍辱偷生的罪臣之女，如今统摄六宫、母仪天下。而当年陷害你父亲的那些人——郑家早已灰飞烟灭，周坤已是阶下之囚。</p>
+            <p>凤冠上的明珠在烛光中闪烁。你看着铜镜中的自己——华贵、威严、不可一世。</p>
+            <p class="thought">父亲……你看到了吗？你的女儿没有输。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">你选择了权力与复仇。金凤在上，不负此生。</p>
+        `,
+        choices: [
+            { text: '🔄 重新开始游戏', next: 'restart', effects: {} }
+        ]
+    };
+
+    // 修正第一幕结尾连接第二幕
+    storyNodes['chapter2_preview'].choices = [
+        { text: '进入第二幕 · 故人重逢', next: 'chapter2_start', effects: {} }
+    ];
+
+    // 更新场景音乐映射（新增场景）
+    Object.assign(sceneMoodMap, {
+        'chapter2_start': 'majestic',
+        'ch2_banquet_careful': 'tense',
+        'ch2_banquet_bold': 'tense',
+        'ch2_banquet_observe': 'mysterious',
+        'ch2_play_safe': 'calm',
+        'ch2_play_signal': 'romantic',
+        'ch2_play_humble': 'calm',
+        'ch2_meet_prince': 'romantic',
+        'ch2_meet_prince_guard': 'mysterious',
+        'ch2_meet_prince_disguise': 'mysterious',
+        'ch2_prince_case': 'tense',
+        'ch2_prince_emotion': 'romantic',
+        'ch2_prince_motive': 'mysterious',
+        'ch2_prince_tender': 'romantic',
+        'ch2_prince_confess_early': 'romantic',
+        'ch2_prince_why': 'calm',
+        'ch2_prince_ambition': 'tense',
+        'ch2_prince_alliance': 'majestic',
+        'ch2_refuse_prince': 'calm',
+        'ch2_third_prince': 'romantic',
+        'ch2_xjy_formal': 'calm',
+        'ch2_xjy_intimate': 'romantic',
+        'ch2_xjy_direct': 'mysterious',
+        'ch2_xjy_test': 'tense',
+        'ch2_xjy_alliance': 'calm',
+        'ch2_scholar': 'calm',
+        'ch2_scholar_meet': 'romantic',
+        'ch2_scholar_letter': 'calm',
+        'ch2_scholar_plan': 'tense',
+        'ch2_scholar_concern': 'romantic',
+        'ch2_end': 'majestic',
+        'ch3_start': 'tense',
+        'ch3_exam_help': 'mysterious',
+        'ch3_exam_prepare': 'calm',
+        'ch3_exam_consort': 'tense',
+        'ch3_exam': 'tense',
+        'ch3_exam_clever': 'majestic',
+        'ch3_exam_pass': 'calm',
+        'ch3_peace_marriage': 'majestic',
+        'ch3_hlt_avoid': 'mysterious',
+        'ch3_hlt_engage': 'majestic',
+        'ch3_hlt_ignore': 'calm',
+        'ch3_hlt_meeting': 'majestic',
+        'ch3_hlt_probe': 'tense',
+        'ch3_hlt_decline': 'calm',
+        'ch3_hlt_deflect': 'mysterious',
+        'ch3_hlt_refuse': 'tense',
+        'ch3_hlt_prince_help': 'calm',
+        'ch3_end': 'mysterious',
+        'ch3_help_swn': 'romantic',
+        'ch3_comfort_swn': 'calm',
+        'ch3_swn_consort': 'tense',
+        'ch4_start': 'tense',
+        'ch4_coordinate': 'tense',
+        'ch4_careful': 'mysterious',
+        'ch4_emperor_angle': 'tense',
+        'ch4_swn_crisis': 'mysterious',
+        'ch4_swn_observe': 'mysterious',
+        'ch4_swn_confront': 'tense',
+        'ch4_emperor_permission': 'majestic',
+        'ch4_present_plan': 'tense',
+        'ch4_finale_emperor': 'majestic',
+        'ch4_finale_prince3': 'majestic',
+        'ch4_finale_prince_xch': 'majestic',
+        'ending_branch': 'calm',
+        'ending_prince': 'romantic',
+        'ending_regent': 'majestic',
+        'ending_scholar': 'romantic',
+        'ending_grassland': 'majestic',
+        'ending_power': 'majestic'
+    });
+</script>

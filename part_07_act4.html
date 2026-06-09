@@ -1,0 +1,725 @@
+<script>
+    // ===== 第四幕：翻案风暴 · 证据终局与呈堂风云（扩展版） =====
+
+    storyNodes['ch4_start'] = {
+        location: '后宫 · 永安殿',
+        time: '永昭九年 · 春初',
+        text: `
+            <p style='text-align:center;color:var(--gold);font-family:Ma Shan Zheng,cursive;font-size:1.3rem;margin-bottom:2rem;'>—— 第四幕 · 翻案风暴 ——</p>
+            <p>春风乍起，御花园残雪未消，枝头却已隐隐透出新绿。宫墙上的积雪被日头晒得发亮，远远看去，像是一层尚未消融的旧罪。</p>
+            <p>你摊开案上的一张粗略图谱——那是你亲手绘制的「沈案证据链」。信物、密信、口供、朝局……诸多线条在纸上交错，最终汇成一个指向兵部侍郎周坤与郑家的结点。</p>
+            <p class='narration'>瑾王手中，握有周坤与北狄联络的信物；三皇子通过贤妃，掌握了当年审案官员门生张怀远的去向；顾行之则凭翰林院编修之职，得以接近兵部档案库。你自己，在后宫悄然搜集皇后与郑家往来的蛛丝马迹。</p>
+            <p>唯独缺少的，是那一份藏在兵部档案库深处的调令原件——只要证明印章伪造，周坤便再无狡辩之辞。</p>
+            <p>几日前，你托人送出的那封信终于得了回音。顾行之的回信摊在掌心，笔迹清峻。</p>
+            <p class='dialogue' data-speaker="顾行之" style='font-style:italic;'>「兵部因贪墨案即将接受彻查，我或可借修史之名调阅旧档。此行凶险，然机不可失。」</p>
+            <p class='thought'>机会终于来了。只是，这一次要冒的险，不仅是他的仕途，还有你在宫中的性命——若稍有差池，你们所有的隐线都可能被一并扯出。</p>
+        `,
+        choices: [
+            {
+                text: '回信催促顾行之抓住时机，全力取出调令原件，哪怕冒更大风险',
+                next: 'ch4_setup',
+                effects: { case: 4, affection: { gxz: 1 }, safety: -3 }
+            },
+            {
+                text: '叮嘱他以自身安全为先，宁可放慢脚步，也不要轻易暴露行迹',
+                next: 'ch4_setup',
+                effects: { case: 2, affection: { gxz: 2 }, safety: 1 }
+            },
+            {
+                text: '同时暗中知会瑾王与三皇子，提醒他们关注兵部动向，以备接应',
+                next: 'ch4_setup',
+                effects: { case: 3, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_setup'] = {
+        location: '永安殿 · 内室',
+        time: '数日后',
+        text: `
+            <p>春雨连绵，永安殿窗纸被雨丝敲得发软。案几上摊着数卷抄本与地图，你用细笔将零散的线索一一串联。</p>
+            <p>苏婉宁在一旁翻阅抄本，目光顺着那张密密麻麻的证据图谱来回游走，忍不住压低声音。</p>
+            <p class='dialogue' data-speaker="苏婉宁">「姐姐，若真把这些都揭出来，兵部和郑家……会不会拼命反扑？」</p>
+            <p>你没有立刻回答，只是用笔尖在周坤的名字旁轻轻一点。</p>
+            <p class='thought'>翻案从不是一条只通向光明的路。你要做的，不仅是让真相浮出水面，还要想好在水面被搅浑之后，如何让自己不被拖下去。</p>
+        `,
+        choices: [
+            {
+                text: '将证据链再梳理一遍，标出每一处可能被质疑的漏洞，以备在朝堂上逐一回应',
+                next: 'ch4_final_clue',
+                effects: { case: 3 }
+            },
+            {
+                text: '安排心腹宫女与内侍彼此照应，一旦宫中风声不对，立刻传讯后退',
+                next: 'ch4_final_clue',
+                effects: { case: 2, safety: -1 }
+            },
+            {
+                text: '只让苏婉宁知晓大概，不让她接触细节，免得她再度被人拿捏',
+                next: 'ch4_final_clue',
+                effects: { safety: 1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_final_clue'] = {
+        location: '永安殿 / 文渊阁密信',
+        time: '数日后',
+        text: `
+            <p>又过数日，一封来自翰林院的密信悄然抵达永安殿。纸薄如蝉翼，却沉重如千钧。</p>
+            <p class='dialogue' data-speaker="顾行之" style='font-style:italic;'>「兵部档案库已封存多案卷宗，我获准以修史名义旁观查阅。然调令原件所在之阁钥匙在兵部尚书与侍郎手中，需另谋出入之道。」</p>
+            <p>顾行之在信中详细描绘了兵部档案库的布局与守卫班次，还在角落画下数个记号——那些记号，与你自永安殿打听来的宫门司更记录恰好对上。</p>
+            <p class='thought'>兵部因贪墨案陷入风口浪尖，人人自危，反倒给了你们一线空隙。只是，要从那堆「机密」中取出调令原件，无异于从虎口夺牙。</p>
+        `,
+        choices: [
+            {
+                text: '让顾行之伪造公文，以「查阅旧案以辅新案」为名直接请求调用原件，正面突破',
+                next: 'ch4_gxz_risk',
+                effects: { case: 3, affection: { gxz: 1 }, safety: -2 }
+            },
+            {
+                text: '请瑾王暗中疏通兵部小吏，在档案库值守时「不小心」放他进去',
+                next: 'ch4_gxz_risk',
+                effects: { case: 4, safety: -2 }
+            },
+            {
+                text: '嘱咐他另寻更长远的法子，只携抄录与拓印离开，不硬取原件，以免刺激兵部高层',
+                next: 'ch4_gxz_risk',
+                effects: { case: 2, affection: { gxz: 2 }, safety: 1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_gxz_risk'] = {
+        location: '兵部 · 档案库 / 永安殿',
+        time: '永昭九年 · 春末',
+        text: `
+            <p>那一日，天色阴沉。远处雷声滚滚，却迟迟未落雨。</p>
+            <p class='narration'>兵部衙署深处，厚重的铜锁被缓缓开启。顾行之身着翰林院编修公服，随查案官员一同进入档案库。厚尘扑鼻，木架林立，卷宗如山。</p>
+            <p>他按你们事先推算好的位置，一卷卷翻阅，与身旁官员闲谈着与贪墨案相关的内容，神色从容。直到某一刻，他的手指停在一卷不起眼的调令之上——那枚印章的朱红，比旁边略浅半分。</p>
+            <p>与此同时，你在永安殿中跪坐佛案前，手中佛珠一颗颗滑过，心却早随那一枚枚翻动的卷宗飞入兵部深处。</p>
+            <p class='thought'>若他失手，你与他的书信便有被翻出的危险；瑾王、三皇子与贤妃在案中的影子，也难以全身而退。你在心里默念他的名字，仿佛借此为他压下那一刻的手抖。</p>
+        `,
+        choices: [
+            {
+                text: '选择相信顾行之的分寸，只在宫中静候消息，不再额外布置，以免节外生枝',
+                next: 'ch4_gxz_result',
+                effects: { case: 3, affection: { gxz: 1 }, safety: -2 }
+            },
+            {
+                text: '暗中请瑾王安排人手在兵部外接应，一旦风声不对，立刻制造事端转移视线',
+                next: 'ch4_gxz_result',
+                effects: { case: 2, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_gxz_result'] = {
+        location: '永安殿 · 夜',
+        time: '同日夜',
+        text: `
+            <p>夜色沉沉，你在案前挑灯而坐。窗纸上投着桂树的影子，被风吹得摇曳不定。</p>
+            <p>吱呀一声，窗格轻响。一枚小石子从缝隙间弹入室内，落在你脚边——其上系着一条极细的黑线。</p>
+            <p>顺着线拉开，一只用油纸包裹的小竹筒滚入掌中。你拆开，里面是两样东西：一份调令原件的拓印，和一张薄薄的纸。</p>
+            <p class='dialogue' data-speaker="顾行之" style='font-style:italic;'>「原件未敢带出，然拓本足证伪印。档案库已起疑，有人察觉卷宗被动。短期不可再入。」</p>
+            <p>竹筒底部还夹着一小片被削下的木刺，其上隐约可见真印与伪印的差别痕迹。顾行之用极小的字在旁注释，笔画却一如既往稳健。</p>
+            <p class='thought'>他从虎口中叼出了你最需要的牙。接下来，轮到你把这颗牙送到足以撕开猛兽咽喉的地方。</p>
+        `,
+        effects: { case: 4, affection: { gxz: 2 }, safety: -1 },
+        choices: [
+            {
+                text: '小心收好拓本与木刺，将它们与其他证据一同锁入暗格，开始筹划呈递之法',
+                next: 'ch4_evidence_complete',
+                effects: { case: 1 }
+            },
+            {
+                text: '先让阿蛮检查暗格与屋内陈设，确认无人动过你的东西，再将竹筒封好',
+                next: 'ch4_evidence_complete',
+                effects: { safety: 1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_evidence_complete'] = {
+        location: '永安殿 · 夜',
+        time: '取卷当夜稍后',
+        text: `
+            <p>烛火燃到一半，蜡泪沿着铜台缓缓流下，凝成苍白的痕。</p>
+            <p>你将所有证据按顺序摊开：沈彦清亲笔密信、周坤通敌信物、张怀远的口供节录、兵部伪造调令的拓印、顾行之削下的一角真印……每一件都清晰无比，却又沉重如山。</p>
+            <p class='thought'>至此，沈案证据链终于闭合：有密信、有信物、有证人、有伪印。翻案所需的「理」，已经备齐；只差「势」——你必须选择一只足以承受这份真相的手，将它捧到天子案前。</p>
+        `,
+        effects: { case: 6 },
+        choices: [
+            {
+                text: '先整理所有证据，拟成一套缜密的呈文，再决定由谁送上御前',
+                next: 'ch4_strategy',
+                effects: { safety: 2 }
+            },
+            {
+                text: '分别将证据副本送往瑾王、三皇子与顾行之，让三条线同时推进，以防其中一条被截',
+                next: 'ch4_strategy',
+                effects: { case: 2, safety: -2 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_strategy'] = {
+        location: '永安殿 · 内室',
+        time: '数日后 · 夜',
+        text: `
+            <p>窗外春雨渐歇，檐下雨珠一滴滴坠入石槽，发出清脆的响声。你俯身伏案，面前摊着三份不同的呈文草稿。</p>
+            <p>一份将重心放在兵部伪令与周坤通敌上，尽量淡化皇帝当年的失察；一份突出郑家把持兵部、欺君罔上的罪状，矛头直指世家权柄；还有一份，则从律法入手，以「旧案复审」为名，试图在不触及储位之争的前提下打开缺口。</p>
+            <p class='thought'>不同的排列方式，不同的措辞侧重，会把你推向不同的盟友，也会得罪不同的人。你要在这三条路中选出一条，作为最终的棋路。</p>
+        `,
+        choices: [
+            {
+                text: '以皇帝颜面为先，把重点落在「臣下欺瞒」上，尽量不触及当年的决断错误',
+                next: 'ch4_present_method',
+                effects: { case: 4, safety: -2 }
+            },
+            {
+                text: '以兵部与郑家的权势为靶，将沈案置于世家擅权的脉络中，求一举动摇其根基',
+                next: 'ch4_present_method',
+                effects: { case: 4, safety: -3 }
+            },
+            {
+                text: '以律法与清议为名，强调「旧案复审」是为了肃清法度，而非只为个人伸冤',
+                next: 'ch4_present_method',
+                effects: { case: 4, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_present_method'] = {
+        location: '永安殿 · 内室',
+        time: '同夜稍后',
+        text: `
+            <p>烛火在夜风中摇曳，你将三份草稿分别叠好，又一次次展开、重读、再叠起。</p>
+            <p class='narration'>若由皇帝亲自「发现」此案，是最能保全面子的方式，却也是最靠近风口浪尖的一步；若由瑾王在朝堂上发难，势必撼动郑家与储位之争的根基；若由三皇子联合御史台弹劾，则是以清流之名撕开郑家的皮，声势浩大却难以全身而退。</p>
+            <p class='thought'>你终于明白，这一刻的选择，不仅关乎沈家的清白，也关乎未来几年大晟朝局的走向——以及你和那些与你牵扯不清之人的命运。</p>
+        `,
+        choices: [
+            {
+                text: '选择皇帝路线——设计一场「陛下偶然翻到旧卷」的戏，让他在不损颜面的前提下看见真相',
+                next: 'ch4_emperor_path',
+                effects: { case: 5, safety: -4 }
+            },
+            {
+                text: '选择瑾王路线——让他以「兵变未发之先」的姿态，带证据在朝堂上兵谏周坤与郑家',
+                next: 'ch4_prince_path',
+                effects: { case: 5, safety: -5, flags: { prince_alliance: true, prince_coup: true } }
+            },
+            {
+                text: '选择三皇子路线——由他联合御史台清流，公开弹劾周坤与郑家，借舆论之势倒逼皇帝表态',
+                next: 'ch4_xjy_path',
+                effects: { case: 5, safety: -3, flags: { xjy_alliance: true } }
+            }
+        ]
+    };
+
+    // —— 皇帝路线 ——
+    storyNodes['ch4_emperor_path'] = {
+        location: '永安殿 / 养心殿外',
+        time: '永昭九年 · 夏前',
+        text: `
+            <p>你选择将命运的最后一搏，押在那个多疑而冷漠，却握有天下生杀大权的男人身上。</p>
+            <p>这日黄昏，你随例被召入养心殿侍读。殿外梧桐新绿，殿内却仍旧灯火如昼。</p>
+            <p>你与顾行之事先排演好的「旧案汇编」，此刻正静静躺在诸多兵部奏折之下，外题朴素，只写着「兵部往年调令杂录」。</p>
+            <p class='thought'>只要皇帝在翻阅贪墨案奏报时顺手抽出这一卷，一切便水到渠成；若他忽略过去，这一局就此落空，你再难找到第二个同样恰当的时机。</p>
+        `,
+        choices: [
+            {
+                text: '在侍读时适时提起「旧案」，为他翻阅那卷汇编制造一个顺理成章的契机',
+                next: 'ch4_emperor_setup',
+                effects: { case: 1, affection: { xcy: 1 }, safety: -1 }
+            },
+            {
+                text: '刻意沉默，只在研墨时将那卷旧案轻轻推近，让选择权完全落在他手中',
+                next: 'ch4_emperor_setup',
+                effects: { affection: { xcy: 2 }, safety: 1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_emperor_setup'] = {
+        location: '养心殿 / 御书房',
+        time: '同日黄昏',
+        text: `
+            <p>御书房内，龙案上堆叠着厚厚一摞奏折。皇帝批阅奏报至半途，眉间隐有疲色。</p>
+            <p>你替他研墨添香，低眉顺眼，只在心底数着他翻页的次数。当那卷「兵部往年调令杂录」终于被他随手抽起时，你几乎能听见自己心跳的声音。</p>
+            <p class='dialogue' data-speaker="萧承煜">「沈彦清……」他低声念出这个已经多年无人敢提的名字，指尖停在伪造调令的拓印旁边，眼神一点点冷下去。</p>
+            <p class='narration'>他不是不明白伪印意味着什么，只是当年为了拉拢郑家，选择了视而不见。如今这些证据重新摆在他面前，就像一面镜子，将当年的懦弱与妥协毫不留情地照了出来。</p>
+            <p>你在一旁缓缓跪下，额头抵地。</p>
+            <p class='dialogue' data-speaker="玩家">「臣妾不敢妄言，只是这些年偶然听闻旧事，与手中几件零散线索相合，才斗胆请顾行之等人佐证……一切皆凭陛下圣裁。」</p>
+        `,
+        effects: { case: 5, affection: { xcy: 5 }, safety: -3, flags: { emperor_permission: true } },
+        choices: [
+            {
+                text: '静候皇帝自行下结论，不再多言，以退为进',
+                next: 'ch4_emperor_reveal',
+                effects: { safety: 1 }
+            },
+            {
+                text: '在最关键的一刻抬头直视他，轻声一句：「陛下若愿昭雪此案，天下自知圣明。」',
+                next: 'ch4_emperor_reveal',
+                effects: { safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_emperor_reveal'] = {
+        location: '太和殿 / 御前大对',
+        time: '永昭九年 · 夏初',
+        text: `
+            <p>数日后，太和殿大朝。金砖如镜，百官分列两侧，殿外日光灼热，殿内却寒意森森。</p>
+            <p>皇帝将一卷卷奏折抛至案前，目光在群臣脸上缓缓掠过，最终停在兵部尚书与周坤身上。</p>
+            <p class='dialogue' data-speaker="萧承煜">「朕近阅旧案，有一事，诸卿可知？」</p>
+            <p class='narration'>当那卷汇集了伪印拓本与旧日调令的册子在众目睽睽之下展开，当周坤曾经亲手按下的那一枚假印与真印被并列在金案之上，大殿内的空气仿佛在一瞬间凝固。</p>
+            <p>你站在帘后，隔着珠帘隐约看见皇帝握紧的指节，以及他声音里刻意压抑的怒意。</p>
+        `,
+        effects: { case: 4, affection: { xcy: 2 }, safety: -2, rank: -3 },
+        choices: [
+            {
+                text: '屏息静观，让这一切以「圣上亲自洞察旧案」的姿态展开',
+                next: 'ch4_confrontation',
+                effects: { safety: 1 }
+            },
+            {
+                text: '在帘后悄然落下热泪，让皇帝在不经意间瞥见你的激动与悲恸',
+                next: 'ch4_confrontation',
+                effects: { affection: { xcy: 1 }, safety: -1 }
+            }
+        ]
+    };
+
+    // —— 瑾王路线 ——
+    storyNodes['ch4_prince_path'] = {
+        location: '永安殿 / 瑾王府密信',
+        time: '永昭九年 · 夏初前夕',
+        text: `
+            <p>夜色沉沉，你在灯下展开来自瑾王府的密信。纸上字迹洒脱，却藏着压抑的锋芒。</p>
+            <p class='dialogue' data-speaker="萧承珩" style='font-style:italic;'>「若要动周坤与郑家，此时不出手，更待何时？」</p>
+            <p>信末画着一枚极小的棋子图案，旁边只添了一个字：等。</p>
+            <p class='thought'>你太清楚这个男人的性子——一旦决定出手，便绝不会半途而废。你需要做的，是决定他挥刀的方向与力度。</p>
+        `,
+        choices: [
+            {
+                text: '在密信中详细列出证据要点，劝他一次性在朝堂上亮出全部底牌',
+                next: 'ch4_prince_strike',
+                effects: { case: 3, affection: { xch: 2 }, safety: -2 }
+            },
+            {
+                text: '提醒他保留一部分证据，以防局势失控时还能有回旋余地',
+                next: 'ch4_prince_strike',
+                effects: { case: 2, affection: { xch: 1 }, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_prince_strike'] = {
+        location: '太和殿 / 朝堂',
+        time: '永昭九年 · 夏初',
+        text: `
+            <p>清晨的钟鼓声回荡在皇城上空，太和殿前丹陛生辉。</p>
+            <p>那一日，瑾王身着朝服立于百官之列，神情看似懒散，眼底却是一片冷意。奏事至兵部贪墨案时，他忽然出班，手中捧着你送出的证据卷。</p>
+            <p class='dialogue' data-speaker="萧承珩">「臣瑾王，有本启奏。」</p>
+            <p>他展开奏本，列出周坤贪墨军饷、私下与北狄往来、陷害忠良三宗大罪，每一条罪状之下，都附有信物、口供或伪印拓本为证。</p>
+            <p>皇后座下大皇子面色铁青，几乎按捺不住怒意。满朝文武噤若寒蝉。</p>
+            <p class='narration'>这一刻，瑾王不再是那个玩世不恭的闲散王爷，而是手持利刃、准备斩断郑家气数的潜龙。他的每一个字，都像是在替你挥刀。</p>
+        `,
+        effects: { case: 6, affection: { xch: 4 }, safety: -6, flags: { prince_coup: true } },
+        choices: [
+            {
+                text: '在后宫静听朝堂风声变化，为瑾王可能遭到的反扑预作准备',
+                next: 'ch4_prince_result',
+                effects: { case: 1 }
+            },
+            {
+                text: '通过贤妃与三皇子暗中稳住部分清流大臣，避免局势彻底失控',
+                next: 'ch4_prince_result',
+                effects: { safety: 2 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_prince_result'] = {
+        location: '后宫 · 各宫',
+        time: '同日 · 午后',
+        text: `
+            <p>瑾王在朝堂上的一番奏对，很快在后宫掀起了波澜。</p>
+            <p>有人悄声传言，说大皇子怒而摔杯，皇后在坤宁宫佛堂前长跪一夜；也有人说，部分边军统领已暗中与瑾王结好，若郑家再敢操弄军权，未必还能像从前那样一手遮天。</p>
+            <p class='thought'>你看不见朝堂上的每一张脸，却能从宫中流动的气息里嗅出风向的改变。瑾王这一步走得太重，一旦皇帝心生疑惧，他很可能从潜龙变成被囚的恶龙。</p>
+        `,
+        effects: { case: 3, affection: { xch: 3 }, safety: -2, rank: -2 },
+        choices: [
+            {
+                text: '在暗中持续收集郑家与兵部的动向，为即将到来的御前大对添上一把火',
+                next: 'ch4_confrontation',
+                effects: { case: 2, safety: -1 }
+            },
+            {
+                text: '暂且按兵不动，专心稳住永安殿局势，避免因瑾王锋芒过盛而被波及',
+                next: 'ch4_confrontation',
+                effects: { safety: 2 }
+            }
+        ]
+    };
+
+    // —— 三皇子路线 ——
+    storyNodes['ch4_xjy_path'] = {
+        location: '永安殿 / 永寿宫',
+        time: '永昭九年 · 夏初前夕',
+        text: `
+            <p>你将证据交予三皇子时，他的手指微微发抖，却很快握紧了卷宗。</p>
+            <p class='dialogue' data-speaker="萧璟言">「这是改变天下公道的一次机会，也是改变我命运的一次机会。」他低声道，「我不会辜负你。」</p>
+            <p>永寿宫的窗外，紫藤花正开，花影在他的衣袖上摇曳，仿佛多年前沈府院中的那株老藤，又回到了你们身边。</p>
+            <p class='thought'>当年读书时，他曾拿着律例与兵书与你争论不休，如今他将要拿法度与舆论当作兵刃，去劈开一桩旧案的阴霾。</p>
+        `,
+        effects: { case: 3, affection: { xjy: 2 }, safety: -2 },
+        choices: [
+            {
+                text: '鼓励他以御史台清流为盾，言辞锋利一些，趁势撕开郑家的皮',
+                next: 'ch4_xjy_court',
+                effects: { case: 1, affection: { xjy: 1 }, safety: -1 }
+            },
+            {
+                text: '提醒他顾及皇帝颜面，在措辞上多用「失察」与「蒙蔽」，少用「失德」与「失信」',
+                next: 'ch4_xjy_court',
+                effects: { safety: 1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_xjy_court'] = {
+        location: '御史台 / 朝堂',
+        time: '永昭九年 · 夏初',
+        text: `
+            <p>数日后，御史台联名上奏，公开弹劾周坤「当年挟私报复、伪造调令、构陷忠良」。弹章辞锋犀利，逐条引用你们提供的证据。</p>
+            <p>早朝之上，三皇子从百官中走出，恭谨而坚定地请求重新审理沈案，以正天下法度。</p>
+            <p class='narration'>他没有提你，却在每一处用词上都为你留足了余地——既维护了忠臣清名，又尽量避免让「皇帝当年失察」这一事实正面暴露。御史台众言官纷纷附议，殿内清议如潮。</p>
+            <p>你远在后宫，只能从苏婉宁匆匆带回的耳语中，拼凑出这场朝堂风云的轮廓。</p>
+        `,
+        effects: { case: 5, affection: { xjy: 3 }, safety: -3 },
+        choices: [
+            {
+                text: '在永寿宫陪贤妃一起听候消息，静观三皇子在朝堂上的一举一动',
+                next: 'ch4_xjy_result',
+                effects: { affection: { xjy: 1 } }
+            },
+            {
+                text: '暗中嘱咐顾行之与御史台照应，让证据呈递更趋严密，无懈可击',
+                next: 'ch4_xjy_result',
+                effects: { case: 2, affection: { gxz: 1 } }
+            }
+        ]
+    };
+
+    storyNodes['ch4_xjy_result'] = {
+        location: '后宫 · 永寿宫 / 永安殿',
+        time: '同日 · 午后',
+        text: `
+            <p>午后时分，永寿宫的钟声缓缓荡开。贤妃从小太监口中得知早朝经过，长长舒了一口气。</p>
+            <p class='dialogue' data-speaker="贤妃">「陛下虽未立刻下旨，却已命刑部与大理寺会同复查旧卷。」贤妃握着你的手，眼中有泪光，「阿言……终究没有白读那些律例。」</p>
+            <p>你离宫时路过御花园，远远看见三皇子立在廊下，被同僚簇拥着，却显得有些失神。直到他抬头与远处的你隔空对上一眼，眼中的茫然才被一点点坚定替代。</p>
+            <p class='thought'>他用自己的名誉与仕途，为你撕开了旧案的一角。接下来，便是让这条裂缝扩散成无法弥合的断层。</p>
+        `,
+        effects: { case: 4, affection: { xjy: 2 }, safety: -1, rank: -1 },
+        choices: [
+            {
+                text: '在暗中持续收集郑家与兵部的动向，为即将到来的御前大对添上一把火',
+                next: 'ch4_confrontation',
+                effects: { case: 2, safety: -1 }
+            },
+            {
+                text: '转而安抚贤妃与三皇子阵营，让清流之势稳住脚跟，避免被郑家反扑所伤',
+                next: 'ch4_confrontation',
+                effects: { affection: { xjy: 1 }, safety: 2 }
+            }
+        ]
+    };
+
+    // —— 御前大对与真相 ——
+    storyNodes['ch4_confrontation'] = {
+        location: '太和殿 / 御前大对',
+        time: '永昭九年 · 盛夏',
+        text: `
+            <p>太和殿内，金砖如镜，百官分列两侧。殿外蝉鸣阵阵，殿内却冷意逼人。</p>
+            <p class='narration'>无论是皇帝亲自翻阅旧卷，还是瑾王在朝堂上兵谏，抑或御史台与三皇子联名弹劾，所有线索与证物最终都被汇聚到这座殿中——在天下文武的注视下，一件件被呈到龙案之前。</p>
+            <p>周坤跪在殿心，额头磕得血肉模糊。起初他还辩称「当年情势紧迫、或有判断失误」，然而当伪造调令的印章被与真印并列，当张怀远在众目睽睽之下讲述「先构陷后灭口」的经过时，他的声音终于支离破碎。</p>
+            <p class='dialogue' data-speaker="周坤">「臣……臣有罪……」</p>
+            <p class='thought'>这一刻起，沈彦清之案不再只是你个人的执念，而成为大晟律法与权力之间的一场公开对决。</p>
+        `,
+        effects: { case: 4, safety: -3 },
+        choices: [
+            {
+                text: '在帘后保持沉默，只静静看着真相一步步被摊开，不让任何人窥见你的喜怒',
+                next: 'ch4_truth_revealed',
+                effects: { safety: 1 }
+            },
+            {
+                text: '在宣判之前，向皇帝请命：「愿以沈家女之身，亲自监督此案终审。」',
+                next: 'ch4_truth_revealed',
+                effects: { case: 1, safety: -2 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_truth_revealed'] = {
+        location: '太和殿 / 御前大对',
+        time: '同日 · 片刻后',
+        text: `
+            <p>随着一卷卷旧案被重新展开，尘封多年的细节像被风掀开的尘埃，一点点从光中浮现。</p>
+            <p>当年押解文书的内侍供出周坤曾私下更换封皮的细节；流放岭南的旧官吏被押解回京，在众人面前颤抖着讲述当年被威逼作伪证的经过。</p>
+            <p class='narration'>每一段证词都像一块石头，重重砸在殿心的血水上。皇后面色苍白，指节在袖中死死掐住掌心；大皇子咬紧牙关，几次欲言又止。</p>
+            <p>皇帝沉默良久，终于抬手示意众人安静。</p>
+            <p class='dialogue' data-speaker="萧承煜">「昔年沈卿清名在外，朕非不知。今日再见此案，方知当年实为受人蒙蔽。周坤通敌、栽赃忠良，罪无可恕。」</p>
+            <p class='thought'>这句「受人蒙蔽」，既是为自己开脱，也是为你留下转圜的空间。你知道，他愿意承认到这里，已经是极限。</p>
+        `,
+        effects: { case: 5, safety: -2 },
+        choices: [
+            {
+                text: '俯身叩谢，不再多言，让这一句「受人蒙蔽」成为帝王与你之间最后的默契',
+                next: 'ch4_justice',
+                effects: { affection: { xcy: 1 } }
+            },
+            {
+                text: '在心底默默记下今日殿上每一张脸，尤其是那些对判决面露不甘之人',
+                next: 'ch4_justice',
+                effects: { case: 1, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_justice'] = {
+        location: '太和殿 / 宣判',
+        time: '同日 · 午后',
+        text: `
+            <p>午后雷声隐隐，乌云压在宫阙之上。</p>
+            <p>皇帝在龙案前缓缓起身，目光从周坤、郑家代表、大皇子，一一扫过，最终落在群臣之上。</p>
+            <p class='dialogue' data-speaker="萧承煜">「周坤通敌叛国、诬陷忠良、贪墨军饷三罪并罚，交刑部即日问斩；郑氏一族多年擅权，把持兵部，褫夺部分爵位与田地，择其首恶问罪，其余降黜。」</p>
+            <p class='narration'>殿内一片死寂，只有风雨欲来的压抑声响。你看见一些老臣长长叹息，也看见年轻官员眼中闪过的炽烈光芒——他们见证了一桩冤案的翻转，也见证了帝王在权势与法度之间做出的艰难取舍。</p>
+            <p class='thought'>沈家的冤屈，至此昭雪。但你知道，翻案从来不是终点，而是一切新的开始。</p>
+        `,
+        effects: { case: 3 },
+        choices: [
+            {
+                text: '在帘后默念父亲之名，悄然为他磕下三个响头',
+                next: 'ch4_rank_final',
+                effects: { case: 1 }
+            },
+            {
+                text: '抬眼打量百官神色，分辨谁是真心痛惜谁只是随波逐流',
+                next: 'ch4_rank_final',
+                effects: { case: 2, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_rank_final'] = {
+        location: '养心殿 / 后宫各宫',
+        time: '永昭九年 · 夏末',
+        text: `
+            <p>沈案宣判之日，雷雨大作，雨水顺着宫墙流下，仿佛洗去了多年积累的尘埃。</p>
+            <p>周坤押赴市曹斩立决，郑家因长期擅权、把持兵部，被褫夺部分爵位与田地，势力一落千丈。</p>
+            <p class='narration'>而你，作为揭发旧案、缜密串联证据之人，无论在皇帝眼中，还是在百官与后宫众人的目光里，都已不能再被当作一枚普通棋子。</p>
+            <p>有的路线里，皇帝在御前将你一举擢升，封号直追四妃之上；有的路线里，你被赐封高位嫔号，得以在后宫与前朝之间自由出入；也有的路线里，你只受一纸「护国夫人」的封诰，却因此拥有了游走宫内外的名分。</p>
+            <p class='thought'>位份的高低固然不同，但你知道——真正的筹码，从来不只是头上那一顶冠，而是掌中握着的证据与人心。</p>
+        `,
+        choices: [
+            {
+                text: '平静接受封赏，将心神从复仇的执念中抽离，开始打量翻案之后的新局',
+                next: 'ch4_aftermath',
+                effects: { safety: 3 }
+            },
+            {
+                text: '在心底默念父亲之名，暗暗记下今日，大晟律法真正为他开口说话的一日',
+                next: 'ch4_aftermath',
+                effects: { case: 1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_aftermath'] = {
+        location: '大晟皇宫 · 御花园',
+        time: '判决数月后',
+        text: `
+            <p>盛夏已过，御花园的桂树再度吐出初次蕊香。风吹过湖面，带着淡淡的桂花味。</p>
+            <p class='narration'>郑家元气大伤，大皇子失去了最强有力的后盾；兵部换了新任尚书，行事谨慎，不敢再轻易左右边防调令。瑾王的声望因弹劾周坤而水涨船高，三皇子则在清流口碑中被视作「敢言之人」。</p>
+            <p>顾行之在兵部案落幕后主动请缨外调，名义上是督学地方书院，实则远离京中风暴；而北狄赫连部因互市条件落实，与大晟边关上的冲突明显缓和。</p>
+            <p>苏婉宁的弟弟已痊愈，她自己也因你暗中周旋，得以远离淑妃的操控。只是你心里明白，这份平静来之不易。</p>
+            <p class='thought'>翻案已成，可你的人生并未因此画上句号。真正的选择，反而在此刻摆在你面前。</p>
+        `,
+        choices: [
+            {
+                text: '在御花园的桂树下默想自己的去处——是继续留在这座宫城，还是走向宫墙之外',
+                next: 'ch4_swn_final',
+                effects: { safety: 1 }
+            },
+            {
+                text: '回想起草原上那道桀骜的身影，以及他临行前留给你的邀约',
+                next: 'ch4_swn_final',
+                effects: { affection: { hlt: 10 } }
+            }
+        ]
+    };
+
+    storyNodes['ch4_swn_final'] = {
+        location: '永安殿 · 内室',
+        time: '同日 · 夜',
+        text: `
+            <p>夜深，永安殿内只剩一盏宫灯。苏婉宁抱着一卷新赐的经书坐在你面前，指尖无意识地摩挲着封皮。</p>
+            <p class='dialogue' data-speaker="苏婉宁">「姐姐，听说……有人在议论，若不是你，我也不可能躲过淑妃那一关。」</p>
+            <p>她抬起头，眼中既有感激，也有隐约的惶惑。</p>
+            <p class='dialogue' data-speaker="苏婉宁">「若有一日你真的离开这宫城……我该怎么办？」</p>
+            <p class='thought'>你想起她病弱的弟弟、想起她与侍卫林崇那段危险而卑微的情意，也想起那些她几乎要被逼着背叛你的时刻。你们走到今日，并非没有裂缝，但这些裂缝最终都被时间与选择缝合。</p>
+        `,
+        choices: [
+            {
+                text: '坦言未来无论去留，都会尽力为她谋一条出路，甚至不惜安排她与林崇离宫',
+                next: 'ch4_swn_goodbye',
+                effects: { trust: { swn: 8 }, safety: -3 }
+            },
+            {
+                text: '劝她暂且留在宫中，以你的新位份为她遮风挡雨，等待局势再明朗',
+                next: 'ch4_swn_goodbye',
+                effects: { trust: { swn: 3 }, safety: 1 }
+            },
+            {
+                text: '轻描淡写地提醒她：你与她终究是各自命运的行路人，未来谁也无法为谁停步',
+                next: 'ch4_swn_goodbye',
+                effects: { trust: { swn: -8 }, safety: 2 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_swn_goodbye'] = {
+        location: '永安殿 · 院中桂树下',
+        time: '数日后 · 傍晚',
+        text: `
+            <p>夕阳将天边染成一片柔和的金红。永安殿院中的老桂树下，你与苏婉宁并肩而坐。</p>
+            <p>若你为她谋好了出路，她会紧紧握住你的手，哽咽着答应在新的地方好好活下去；若你让她留下，她会轻声说愿意陪你一起看这宫城的风起云涌；若你只是淡淡与她道别，她的笑容里也会有一丝你难以看穿的孤决。</p>
+            <p class='dialogue' data-speaker="苏婉宁">「无论如何，能与姐姐在这宫中相遇，是我这一生最不后悔的事。」</p>
+            <p class='thought'>你不知道日后她会走向怎样的结局，只知道在这一刻，你们至少没有彼此亏欠。</p>
+        `,
+        choices: [
+            {
+                text: '拥她入怀，轻声道一声「珍重」，将这份姐妹情谊郑重收好',
+                next: 'ch4_final_choice',
+                effects: { trust: { swn: 7 } }
+            },
+            {
+                text: '只是远远看她一眼，在心底为她点上一盏无人知晓的长灯',
+                next: 'ch4_final_choice',
+                effects: { trust: { swn: -7 } }
+            }
+        ]
+    };
+
+    storyNodes['ch4_final_choice'] = {
+        location: '永安殿 · 桂树下',
+        time: '永昭九年 · 初秋夜',
+        text: `
+            <p>夜色如墨，桂花香浓。你独自坐在永安殿院中的老桂树下，指尖轻轻抚过树皮粗砺的纹理。</p>
+            <p>翻案已成，父亲沉冤得雪。曾经逼得你无路可退的执念，终于在这一刻化作一声长长的叹息。</p>
+            <p class='thought'>剩下的路，便只能由你自己选择了——留在这座宫城，继续与权势共舞，还是走向宫墙之外，将余生交给山河与人间烟火。</p>
+        `,
+        choices: [
+            {
+                text: '选择留下——以新得的位份与声望为刃，在这宫城之中继续步步为营，登上更高之处',
+                next: 'ch4_to_ending',
+                effects: { safety: 3 }
+            },
+            {
+                text: '选择离开——以守孝、养病或护国之名，离开皇宫，去往宫墙之外的广阔天地',
+                next: 'ch4_to_ending',
+                effects: { safety: 5 }
+            },
+            {
+                text: '尚未决定，只是抬头望向星空，任由命运在诸多可能之中为你作出最后一次裁决',
+                next: 'ch4_to_ending',
+                effects: { case: 1, safety: -1 }
+            }
+        ]
+    };
+
+    storyNodes['ch4_to_ending'] = {
+        location: '大晟皇宫 · 未知之路',
+        time: '永昭九年 · 秋',
+        text: `
+            <p>清风吹过宫墙，卷起远处树梢上的落叶。你回望身后那巍峨深重的殿宇，又看向前方未明的路。</p>
+            <p class='narration'>翻案已成，旧案昭雪。你不再是被命运驱赶的棋子，而是能在棋盘上落子之人。不同的情感、不同行走的路径，早已在你不经意的每一次选择中编织成网——此刻，它们将在命运的天平上共同发声。</p>
+            <p class='thought'>你深吸一口气，终于抬脚，向前迈出那一步。</p>
+        `,
+        choices: [
+            {
+                text: '🌙 接受命运的裁决',
+                next: 'ending_branch',
+                effects: { safety: 1 }
+            },
+            {
+                text: '在心底悄然许下一个愿望，把最终的答案交给未来的自己',
+                next: 'ending_branch',
+                effects: { case: 1 }
+            }
+        ]
+    };
+
+    // 更新场景音乐映射（第三、四幕所有节点）
+    Object.assign(sceneMoodMap, {
+        // 第三幕
+        'ch3_start': 'tense',
+        'ch3_exam_prep': 'tense',
+        'ch3_exam': 'tense',
+        'ch3_exam_result': 'majestic',
+        'ch3_plot_thicken': 'mysterious',
+        'ch3_investigation': 'mysterious',
+        'ch3_danger': 'tense',
+        'ch3_danger_resolve': 'mysterious',
+        'ch3_peace_marriage': 'majestic',
+        'ch3_peace_debate': 'mysterious',
+        'ch3_hlt_appear': 'majestic',
+        'ch3_hlt_interact': 'romantic',
+        'ch3_political': 'tense',
+        'ch3_heqin_threat': 'tense',
+        'ch3_save_self': 'tense',
+        'ch3_save_result': 'majestic',
+        'ch3_rank_up': 'majestic',
+        'ch3_swn_pressure': 'mysterious',
+        'ch3_swn_crisis': 'tense',
+        'ch3_swn_handle': 'romantic',
+        'ch3_swn_aftermath': 'calm',
+        'ch3_rank_up_2': 'majestic',
+        'ch3_deepening': 'romantic',
+        'ch3_romance_choice': 'romantic',
+        'ch3_end': 'mysterious',
+
+        // 第四幕
+        'ch4_start': 'tense',
+        'ch4_setup': 'mysterious',
+        'ch4_final_clue': 'mysterious',
+        'ch4_gxz_risk': 'tense',
+        'ch4_gxz_result': 'tense',
+        'ch4_evidence_complete': 'majestic',
+        'ch4_strategy': 'tense',
+        'ch4_present_method': 'tense',
+        'ch4_emperor_path': 'tense',
+        'ch4_emperor_setup': 'majestic',
+        'ch4_emperor_reveal': 'majestic',
+        'ch4_prince_path': 'tense',
+        'ch4_prince_strike': 'majestic',
+        'ch4_prince_result': 'tense',
+        'ch4_xjy_path': 'tense',
+        'ch4_xjy_court': 'majestic',
+        'ch4_xjy_result': 'tense',
+        'ch4_confrontation': 'majestic',
+        'ch4_truth_revealed': 'majestic',
+        'ch4_justice': 'majestic',
+        'ch4_rank_final': 'majestic',
+        'ch4_aftermath': 'calm',
+        'ch4_swn_final': 'romantic',
+        'ch4_swn_goodbye': 'romantic',
+        'ch4_final_choice': 'calm',
+        'ch4_to_ending': 'majestic'
+    });
+
+</script>

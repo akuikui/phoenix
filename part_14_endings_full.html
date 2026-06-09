@@ -1,0 +1,324 @@
+<script>
+    // ===== 结局判定系统 =====
+    // 根据PE规则：结局由累计数值自动判定，非玩家选择
+    // 优先级从高到低，首个满足条件的结局被触发
+
+    function determineEnding() {
+        const s = gameState;
+        const a = s.affection;
+        const f = s.flags;
+        const t = s.trust;
+
+        // 辅助变量
+        const maxAff = Math.max(a.xch, a.xjy, a.gxz, a.hlt, a.xcy);
+        const hasAlliance = f.prince_alliance || f.xjy_alliance || f.gxz_alliance;
+
+        // ═══ 第一梯队：角色深度羁绊结局（需明确路线选择）═══
+
+        // 1. 草原结局 —— 接受和亲命运 + 赫连霆好感足够
+        if (a.hlt >= 25 && !f.avoided_heqin) {
+            return 'ending_grassland';
+        }
+
+        // 2. 新皇结局·瑾王 —— 瑾王发动兵谏（prince_coup）+ 好感高
+        if (a.xch >= 45 && f.prince_coup) {
+            return 'ending_new_emperor_xch';
+        }
+
+        // 3. 远走结局·瑾王 —— 与瑾王结盟但未走兵谏路线（携手远遁）
+        if (a.xch >= 45 && f.prince_alliance && !f.prince_coup) {
+            return 'ending_prince';
+        }
+
+        // 4. 新皇结局·三皇子 —— 三皇子好感高 + 结盟
+        if (a.xjy >= 40 && f.xjy_alliance) {
+            return 'ending_new_emperor_xjy';
+        }
+
+        // 5. 远走结局·状元 —— 顾行之好感最高 + 翻案成功
+        if (a.gxz >= 45 && a.gxz > a.xch && a.gxz > a.xjy && s.caseProgress >= 70) {
+            return 'ending_scholar';
+        }
+
+        // ═══ 第二梯队：权力/独立结局 ═══
+
+        // 6. 女皇结局 —— 位份极高 + 翻案成功 + 独立路线（未深度结盟）
+        if (s.rank <= 2 && s.caseProgress >= 85 && !hasAlliance) {
+            return 'ending_empress';
+        }
+
+        // 7. 姐妹结局 —— 苏婉宁信任极高 + 独立路线（姐妹情谊优先于帝后）
+        if (t.swn >= 85 && !hasAlliance) {
+            return 'ending_sisters';
+        }
+
+        // 8. 帝后结局 —— 皇帝好感最高且够高
+        if (a.xcy >= 50 && a.xcy >= maxAff) {
+            return 'ending_emperor_queen';
+        }
+
+        // 9. 垂帘结局 —— 位份尚可 + 翻案有进展 + 三皇子有好感但未显式结盟
+        if (s.rank <= 5 && s.caseProgress >= 50 && a.xjy >= 25 && !f.xjy_alliance) {
+            return 'ending_regent';
+        }
+
+        // ═══ 第三梯队：情谊兜底 ═══
+
+        // 10. 姐妹结局（宽松版）—— 信任极高即便有结盟
+        if (t.swn >= 90) {
+            return 'ending_sisters';
+        }
+
+        // ═══ 兜底 ═══
+        // 11. 孤寂结局 —— 无深度羁绊、翻案未竟
+        return 'ending_lonely';
+    }
+
+    // ===== 终幕入口节点 =====
+    storyNodes['ending_branch'] = {
+        location: '',
+        time: '永昭九年 · 盛夏之后',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 终 幕 ——</p>
+            <p style="text-align:center;">翻案已成。父亲沉冤昭雪，罪魁祸首伏法。</p>
+            <p style="text-align:center;">而你——站在命运的岔路口上。</p>
+            <p style="text-align:center;margin-top:1.5rem;color:#6B5B4F;">一路走来的每一次抉择、每一份情感、每一个承诺……</p>
+            <p style="text-align:center;color:#6B5B4F;">都将在此刻汇聚，编织出属于你的结局。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold-light);font-size:0.9rem;opacity:0.7;">命运已定。</p>
+        `,
+        choices: [
+            {
+                text: '🌙 接受命运的裁决',
+                next: () => determineEnding(),
+                effects: { safety: 1 }
+            }
+        ]
+    };
+
+    // ===== 女皇结局 =====
+    storyNodes['ending_empress'] = {
+        location: '大晟皇宫 · 太和殿',
+        time: '数年后',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 女皇结局 · 凤临天下 ——</p>
+            <p>翻案之后的数年间，你以超越常人的权谋与智慧一步步攀至后宫之巅。从采女到皇贵妃，每一级台阶都浸透了心血。</p>
+            <p>你在前朝培植了忠于自己的势力——御史台、六部中皆有你暗中经营的人脉。后宫中，你恩威并施，令六宫俯首。</p>
+            <p>而诸皇子——在你精心布局的权谋之下相互倾轧。大皇子因郑家倒台失去根基后铤而走险谋反，被废为庶人；三皇子卷入夺嫡之争身心俱疲，主动退出；四皇子年幼且其母淑妃已失宠……</p>
+            <p>皇帝积劳成疾，龙体日衰。弥留之际，他看着站在龙榻前的你——那个曾经卑微的采女，如今已是他身边最强大的女人。</p>
+            <p class="dialogue" data-speaker="萧承煜">"……天下交给你了。"这是他最后的遗言。</p>
+            <p>新帝之位空悬。群臣惶恐。而你——身着金色凤袍，从珠帘后走出，端坐于那把龙椅之上。</p>
+            <p class="dialogue" data-speaker="玩家">"从今日起——朕，即天子。"</p>
+            <p>太和殿中，百官跪伏。大晟历史上第一位女皇帝，就此诞生。</p>
+            <p>你俯瞰群臣，心中想起了父亲。</p>
+            <p class="thought">父亲……你的女儿不仅为你洗清了冤屈，还坐上了这天下最高的位置。从此再无人能冤枉沈家、再无人能欺辱弱者。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">最高结局。你不仅复了仇，更改写了历史。一代女皇，青史留名。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 帝后结局 =====
+    storyNodes['ending_emperor_queen'] = {
+        location: '坤宁宫 · 凤座',
+        time: '永昭十年',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 帝后结局 · 棋逢对手 ——</p>
+            <p>翻案成功——但你用了最精妙的方式：不是指控皇帝被蒙蔽，而是让「证据」由皇帝本人「发现」，让他以「圣明天子明察秋毫」的姿态主动昭雪此案。</p>
+            <p>帝王的颜面丝毫未损。反而——他因此愈发欣赏你的智慧与手段。</p>
+            <p class="dialogue" data-speaker="萧承煜">"你是朕见过最聪明的女人。"某日御书房中，萧承煜放下朱笔，看着为他研墨的你，"聪明到让朕……有些不安。"</p>
+            <p class="dialogue" data-speaker="玩家">"陛下不安，臣妾便不聪明便是。"你垂眸微笑。</p>
+            <p class="dialogue" data-speaker="萧承煜">"不——"他伸手托起你的下巴，目光中是复杂的情愫——有占有欲、有忌惮、更有一种帝王不该有的……依赖，"朕不要你收敛。朕要你——做朕的皇后。"</p>
+            <p>废后旨意震惊朝野。郑家倒台后的皇后失去了最后的庇护，被以「善妒不容」之名废入冷宫。</p>
+            <p>而你——从采女一跃成为大晟皇后，统摄六宫。</p>
+            <p>登后大典上，你头戴九凤冠、身着金绣霞帔，接受百官朝贺。皇帝站在你身侧，唇边是你从未见过的笑意。</p>
+            <p class="thought">这个多疑寡情的帝王，最终被你驯服了——不，准确地说，是你们在这场旷日持久的博弈中，找到了彼此唯一对等的对手。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">帝后同心，既是爱情，更是棋局。你是唯一能与帝王并肩的女人。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 远走结局（瑾王线）=====
+    storyNodes['ending_prince'] = {
+        location: '京城郊外 · 官道',
+        time: '永昭九年 · 深秋',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 远走结局 · 与君天涯 ——</p>
+            <p>翻案虽未最终完成，但关键证据已交到了可靠之人手中。顾行之承诺会在朝堂上继续推进——有了那些铁证，翻案只是时间问题。</p>
+            <p>而你——选择了另一条路。</p>
+            <p>深秋的夜里，一辆不起眼的马车停在宫墙外的暗门前。萧承珩亲自来接你。</p>
+            <p class="dialogue" data-speaker="萧承珩">"想好了？"月光下，他难得收起了平日的玩世不恭，认真地看着你，"出了这道门，便再回不来了。"</p>
+            <p class="dialogue" data-speaker="玩家">"萧承珩——"你叫他的名字，没有任何敬称，"我在这宫墙里困了六年。你问我想不想出去？"</p>
+            <p>他笑了。那笑容里有如释重负，有心疼，更有你从小就仰望的温柔。</p>
+            <p>他伸出手。你握住了。</p>
+            <p>马车向南疾驰。京城的灯火在身后渐渐远去。你靠在他肩上，看着窗外如水的月色。</p>
+            <p class="dialogue" data-speaker="玩家">"去哪？"你问。</p>
+            <p class="dialogue" data-speaker="萧承珩">"天涯。"他揽住你的肩，"哪里都好。只要有你。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">放下一切，奔赴自由。有些人值得你放弃整个天下。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 新皇结局（瑾王）=====
+    storyNodes['ending_new_emperor_xch'] = {
+        location: '大晟皇宫 · 登基大典',
+        time: '新朝元年',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 新皇结局 · 瑾王登基 ——</p>
+            <p>翻案之后，郑家倒台引发了连锁反应。大皇子失去支柱后孤注一掷发动兵变——却被早有准备的瑾王萧承珩一举镇压。</p>
+            <p>皇帝在兵变中受惊，龙体急剧恶化。弥留之际，他做了一个所有人都没想到的决定——传位给胞弟瑾王。</p>
+            <p class="dialogue" data-speaker="萧承煜">"承珩……朕的儿子们没一个成器。只有你……守得住这江山。"</p>
+            <p>新帝登基。萧承珩身着龙袍端坐于太和殿上，接受百官朝拜。而他的目光——一次又一次地越过群臣，落在珠帘后的你身上。</p>
+            <p>登基大典后的那个夜晚，他屏退左右，将你拉入内殿。</p>
+            <p class="dialogue" data-speaker="萧承珩">"答案。"他低头看着你，眼中是压抑多年终于释放的深情，"我说过翻案之后告诉你的那个答案——"</p>
+            <p>他俯身，在你额间落下一吻。</p>
+            <p class="dialogue" data-speaker="萧承珩">"做朕的皇后。从今以后——再也没有什么能阻隔你我。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">禁忌之恋修成正果。他为你夺天下，你与他共江山。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 垂帘结局 =====
+    storyNodes['ending_regent'] = {
+        location: '大晟皇宫 · 垂帘之后',
+        time: '新朝初年',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 垂帘结局 · 权倾朝野 ——</p>
+            <p>在你与贤妃的运作下，三皇子萧璟言成功登基。新帝年轻、根基未稳——而你，是他最信任的人。</p>
+            <p>你被封为「辅政夫人」，虽无太后之名，却有太后之权。前朝大事，新帝事事与你商议；后宫之中，你一言九鼎。</p>
+            <p>群臣私下议论：「那珠帘后面坐着的，才是真正的天子。」</p>
+            <p>你不在乎这些议论。你要的从来不是虚名——而是再也不让任何人重蹈父亲的覆辙。</p>
+            <p>你推行了新的审案律令：三司会审、不得屈打成招、冤案可重审。这是你用整个青春换来的改变。</p>
+            <p class="thought">父亲……我没能坐上龙椅，但我坐在了龙椅后面。从今以后——这天下的公道，由我来守。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">不需要皇冠，也能主宰天下。权力的巅峰，不一定在龙椅之上。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 新皇结局（三皇子）=====
+    storyNodes['ending_new_emperor_xjy'] = {
+        location: '大晟皇宫',
+        time: '新朝',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 新皇结局 · 三皇子登基 ——</p>
+            <p>在你与贤妃的暗中辅佐下，三皇子萧璟言在储位之争中后来居上。翻案击垮了郑家，大皇子随之失势。皇帝最终立三皇子为太子——不久后禅位养病。</p>
+            <p>新帝登基。萧璟言——那个曾经在沈府花园与你一同读书的温润少年，如今身着龙袍，目光中多了帝王的威严。</p>
+            <p>但当他看向你时——那眼中的温柔从未改变。</p>
+            <p>他不能娶你为后——你曾是先帝妃嫔，伦理所限。但他以「感念沈氏翻案之功」为名，封你为「护国夫人」，赐府邸于宫外。</p>
+            <p>所有人都知道——护国夫人府就在皇城脚下，新帝每月必往。</p>
+            <p class="dialogue" data-speaker="萧璟言">"如果可以重来……"某个月夜，萧璟言握着你的手低声道，"我想在沈府花园那棵桂花树下，亲口对你说——"</p>
+            <p class="dialogue" data-speaker="玩家">"不必说了。"你微笑着将手指与他交握，"我都知道。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">青梅竹马终成眷属。虽无后位之名，却有相守之实。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 远走结局（状元线）=====
+    storyNodes['ending_scholar'] = {
+        location: '江南 · 山中书院',
+        time: '一年后',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 远走结局 · 琴书相伴 ——</p>
+            <p>翻案成功后，你向皇帝请旨离宫。萧承煜看了你一眼——似乎想说什么，最终只是挥了挥手。</p>
+            <p>你走出宫门的那天，顾行之站在御街尽头等你。他辞了翰林院的官，只背着一箱书。</p>
+            <p class="dialogue" data-speaker="顾行之">"师妹——不，{name}。"他第一次在宫墙外叫你的名字，声音微微发颤，"我等这一天……等了很久。"</p>
+            <p>你们在江南的一座山中定居。顾行之开了一间书院，你教女学生们读书弹琴。日子清贫却自在。</p>
+            <p>每个清晨，他在院中读书，你在檐下抚琴。琴声与书声交织，恰如少年时在沈府的那些光阴。</p>
+            <p class="dialogue" data-speaker="玩家">"行之哥——"某日你忽然唤他幼时的称呼，"我们……是不是回到从前了？"</p>
+            <p>他放下书卷走过来，轻轻将你额前碎发别到耳后。</p>
+            <p class="dialogue" data-speaker="顾行之">"不。"他微笑着，眼中温柔如水，"比从前更好。从前你是师妹——如今你是我的妻。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">世间最好的归宿，不过是回到爱你之人的身边。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 草原结局 =====
+    storyNodes['ending_grassland'] = {
+        location: '北狄 · 大草原',
+        time: '翌年春',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 草原结局 · 天地尽头 ——</p>
+            <p>和亲使团即将离京。赫连霆站在你面前，第一次收起了所有的霸道与玩笑。</p>
+            <p class="dialogue" data-speaker="赫连霆">"跟我走。"他的声音低沉而认真，"我的草原上没有宫墙、没有阴谋。只有风、马、还有——我。"</p>
+            <p>你看着他——这个来自草原的男人，用最直接、最炽热的方式爱你。他不懂中原的含蓄，不会用诗词试探——他只会说「我要你」「跟我走」。</p>
+            <p>你想起父亲已经昭雪，宫中再无牵挂。</p>
+            <p class="dialogue" data-speaker="玩家">"好。"你只说了一个字。</p>
+            <p>赫连霆愣了一瞬——随即仰天大笑，一把将你抱上他的战马。</p>
+            <p>马蹄飞驰，京城在身后化为一个渐渐缩小的点。当你第一次看到草原——无边无际的绿色在天地之间铺展开来，风吹草低，自由无垠。</p>
+            <p>赫连霆从背后揽住你的腰，下巴抵在你肩头。</p>
+            <p class="dialogue" data-speaker="赫连霆">"欢迎回家。我的可敦。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">离开中原，拥抱自由。有些爱情，需要你放弃整个旧世界。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 姐妹结局 =====
+    storyNodes['ending_sisters'] = {
+        location: '江南 · 某处小城',
+        time: '翌年春',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 姐妹结局 · 同行天涯 ——</p>
+            <p>翻案成功后，你向皇帝请旨离宫。出乎意料的是——苏婉宁也请旨同去。</p>
+            <p class="dialogue" data-speaker="苏婉宁">"臣妾不愿留在宫中了，"苏婉宁跪在御前，声音清亮而坚定——这份勇气，是你给她的，"臣妾愿随沈姐姐一同离去。"</p>
+            <p>皇帝看了看你们两个不起眼的采女，挥了挥手——懒得在这种小事上费心。</p>
+            <p>马车驶出京城时，苏婉宁掀开帘子回望宫墙，忽然放声大笑。</p>
+            <p class="dialogue" data-speaker="苏婉宁">"自由了！！！姐姐我们自由了！！！"</p>
+            <p>你也笑了——发自内心地笑。</p>
+            <p>你们在江南的一座小城定居。用翻案后朝廷发还的沈家旧产置办了一间小院。苏婉宁的弟弟病愈后也来了，还有那个憨厚的前侍卫林崇——两人终成眷属。</p>
+            <p>你在小城中开了一间书塾，教邻里的女孩子们读书识字。苏婉宁帮你打理庶务，日子平淡而温馨。</p>
+            <p>某天傍晚，你们坐在院中桂树下（特意种的，和永安殿那棵一样），分饮一壶茶。</p>
+            <p class="dialogue" data-speaker="苏婉宁">"姐姐——"苏婉宁靠在你肩上，笑眯眯的，"当初在掖庭我说「谁也不丢下谁」——我做到了吧？"</p>
+            <p class="dialogue" data-speaker="玩家">"做到了。"你轻轻拍了拍她的手，"我们都做到了。"</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">最温暖的结局。在这冰冷的世间，你们是彼此最坚定的依靠。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // ===== 孤寂结局 =====
+    storyNodes['ending_lonely'] = {
+        location: '大晟皇宫 · 永安殿',
+        time: '数年后',
+        text: `
+            <p style="text-align:center;color:var(--gold);font-family:'Ma Shan Zheng',cursive;font-size:1.5rem;margin-bottom:2rem;">—— 孤寂结局 ——</p>
+            <p>翻案成功了。父亲沈彦清被追封太子太傅，沈家冤案载入史册。</p>
+            <p>你达成了入宫以来唯一的目标。</p>
+            <p>但当尘埃落定后你环顾四周——身边空无一人。</p>
+            <p>瑾王因你的疏远已返回封地，三皇子在储位之争中忙碌无暇顾及旧情。顾行之在翰林院平步青云，你们之间那堵宫墙从未真正打通。赫连霆带着使团返回了草原。皇帝——对你只有利用价值上的「赏识」，谈不上任何真心。</p>
+            <p>苏婉宁……在你忙于翻案的那些日子里，你们之间的距离越来越远。她最终嫁给了一位外放的小官，离开了京城。走前她来辞行，欲言又止。</p>
+            <p class="dialogue" data-speaker="苏婉宁">"姐姐……保重。"</p>
+            <p>你点了点头。想挽留，却发现——你们已经很久没有在桂树下喝过茶了。</p>
+            <p>如今你坐在永安殿的桂树下，独自饮茶。秋风萧瑟，桂花纷纷坠落。你完成了父亲的遗愿，却在这条路上失去了所有人。</p>
+            <p class="thought">值得吗？……也许值得。只是偶尔，在无人的深夜里，你会怀念那些曾经可以握住、却终究放开了的手。</p>
+            <p style="text-align:center;margin-top:2rem;color:var(--gold);font-size:1rem;">—— 终 ——</p>
+            <p style="text-align:center;color:#8B7355;font-size:0.85rem;">翻案成功，却无人分享。有时候，胜利的代价是孤独。</p>
+        `,
+        choices: [{ text: '🔄 重新开始游戏', next: 'restart', effects: {} }]
+    };
+
+    // 覆盖旧的 ending_power 为女皇结局的备选入口
+    storyNodes['ending_power'] = storyNodes['ending_empress'];
+
+    // 更新结局的BGM映射
+    Object.assign(sceneMoodMap, {
+        'ending_branch': 'majestic',
+        'ending_empress': 'majestic',
+        'ending_emperor_queen': 'majestic',
+        'ending_prince': 'romantic',
+        'ending_new_emperor_xch': 'majestic',
+        'ending_new_emperor_xjy': 'romantic',
+        'ending_regent': 'majestic',
+        'ending_scholar': 'romantic',
+        'ending_grassland': 'majestic',
+        'ending_sisters': 'calm',
+        'ending_lonely': 'mysterious'
+    });
+</script>
+</body>
+</html>
